@@ -47,7 +47,9 @@ def belong(tran, value, level):
 
 
 def splitgroup(group):
-    """try to split group, return splited groups
+    """try to split group.
+    if group can be splited, return splited groups
+    else return {}
     """
     if _DEBUG:
         print 'Begin to split %s' % group.value
@@ -244,16 +246,16 @@ def partition(K, att_tree, data):
                     else:
                         # todo
                         # pdb.set_trace()
-                        groups[k].merge_group(gtemp, ['*'])
+                        groups[k] = merge_group(gtemp, ['*'])
                 elif len(gtemp.member) < K:
                     suppcount = suppcount + 1
                     suppress[k] = gtemp
                 else:
                     result[k] = gtemp
         else:
-            # print itemp[0] + " cannot be split" 
+            if _DEBUG:
+                print itemp[0] + " cannot be split" 
             result[itemp[0]] = itemp[1]
-    # print data
     print "Publishing Result Data..."
     # set and get iloss
     loss = setalliloss(result)
