@@ -6,7 +6,7 @@ import random
 import pdb
 
 
-_DEBUG = False
+_DEBUG = True
 treelist = {}
 gl_att_tree = {}
 treesupport = 0
@@ -15,6 +15,7 @@ treesupport = 0
 # compare fuction for sort tree node
 def node_cmp(node1, node2):
     """compare node1(str) and node2(str)
+    Compare two nodes accroding to their support
     """
     global gl_att_tree
     support1 = gl_att_tree[node1].support
@@ -27,6 +28,7 @@ def node_cmp(node1, node2):
 
 def belong(tran, value, level):
     """return tran's gen cut
+    value denote generalization cut, 
     """
     ltemp = []
     result = ''
@@ -36,25 +38,23 @@ def belong(tran, value, level):
             continue
         lentran = len(treelist[t])
         v = treelist[t][lentran - level - 1]
-        if not v in ltemp:
-            ltemp.append(v)
+        ltemp.append(v)
+    # remove duplicate elements
+    ltemp = list(set(ltemp))
     ltemp.sort()
     result = ';'.join(ltemp)
-    # for t in ltemp:
-    #   result +=  t + ';' 
-    # pdb.set_trace()
     return result 
 
 
 def splitgroup(group):
     """try to split group, return splited groups
     """
-    # print 'Begin to split %s' % group.value
+    if _DEBUG:
+        print 'Begin to split %s' % group.value
     member = group.member
     value = group.value
     level = group.level
     groups = {}
-    # print value
     # todo
     for t in value:
         if len(gl_att_tree[t].child) != 0:
@@ -63,30 +63,23 @@ def splitgroup(group):
         return groups
     index = value.index(t)
     tlevel = level[index] + 1
-    # print index
     while member:
         temp = member.pop()
-        # print 'chlid=%s' % temp
         vsplit = belong(temp, value[index], tlevel)
         if vsplit == '':
             pdb.set_trace()
         gvalue = value[:]
         glevel = level[:]
         vtemp = vsplit.split(';')
-        # print vsplit + " %s " % vtemp
         del gvalue[index]
         del glevel[index]
         for t in vtemp:
             if t != '':
                 gvalue.insert(index,t)
                 glevel.insert(index,tlevel)
-        # print 'parent=%s' % gvalue
+        if _DEBUG:
+            print 'parent=%s' % gvalue
         v = ';'.join(gvalue)
-        # v = ''
-        # for t in gvalue:
-        #   v += t + ';'
-        # v = v[:-1]
-        # pdb.set_trace()
         if not v in groups:
             groups[v] = Group([temp], gvalue, glevel)
         else:
@@ -108,7 +101,6 @@ def iloss(tran, middle):
         else:
             print "Program Error!!!! t=%s middle=%s" % (t, middle)
             pdb.set_trace()
-            return 0
         if ptemp.value == t:
             continue
         iloss = iloss + ptemp.support * 1.0 / treesupport
@@ -133,7 +125,6 @@ def middle(tran1, tran2):
             else:
                 treemark1[pt.value] += 1
     # check the other color
-
     for t in tran2:
         if treemark1.has_key(t):
             if not t in trantemp:
@@ -150,10 +141,7 @@ def middle(tran1, tran2):
                     trantemp.append(pt.value)
     if len(trantemp) <= 1:
         return trantemp
-    # pdb.set_trace()
     trantemp.sort(cmp=node_cmp, reverse=True)
-    # pdb.set_trace()
-
     dellist = []
     for t in trantemp:
         ptemp = gl_att_tree[t].child
@@ -181,7 +169,6 @@ def middle(tran1, tran2):
         except:
             print "Error!! When del value according to dellist "
             pdb.set_trace()
-    # trantemp.reverse()
     return trantemp
 
 
@@ -222,12 +209,6 @@ def rassignment(suppress, result):
                 mindis = dtemp
                 minindex = k
                 minmiddle = mtemp
-        '''
-        if len(minmiddle) == 1:
-            print "middle==['*'], value = %s %s" % (temp[1].value, result[minindex].value)
-        else:
-            print "minmiddle = %s" % minmiddle
-        '''
         result[minindex].merge_group(temp[1], minmiddle)
     # update group middle
     for k, v in result.iteritems():
@@ -254,7 +235,6 @@ def partition(K, att_tree, data):
     print "K=%d" % K
     while groups:
         itemp = groups.popitem()
-        # print itemp[0] + " will be split"
         gstemp = splitgroup(itemp[1])
         if len(gstemp) != 0:
             for k, gtemp in gstemp.iteritems():
@@ -277,12 +257,13 @@ def partition(K, att_tree, data):
     print "Publishing Result Data..."
     # set and get iloss
     loss = setalliloss(result)
-    print "Group size %d" % len(result)
-    print "resultcount = %d" % len(result)
-    print '*' * 10
-    print "iloss = %d" % loss
-    print "suppress = %s" % suppcount
-    print "Residue assigment..."
+    if _DEBUG:
+        print "Group size %d" % len(result)
+        print "resultcount = %d" % len(result)
+        print '*' * 10
+        print "iloss = %d" % loss
+        print "suppress = %s" % suppcount
+        print "Residue assigment..."
     rassignment(suppress, result)
     # get iloss
     loss = setalliloss(result)
