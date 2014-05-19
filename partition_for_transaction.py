@@ -25,68 +25,13 @@ def node_cmp(node1, node2):
     else:
         return (node1 > node2)
 
-
-def belong(tran, value, level):
-    """return tran's gen cut
-    value denote generalization cut, 
-    """
-    ltemp = []
-    result = ''
-    for t in tran:
-        # make sure t in chlid of v
-        if value not in treelist[t]:
-            continue
-        lentran = len(treelist[t])
-        v = treelist[t][lentran - level - 1]
-        ltemp.append(v)
-    # remove duplicate elements
-    ltemp = list(set(ltemp))
-    ltemp.sort()
-    result = ';'.join(ltemp)
-    return result 
-
-
-def splitgroup(group):
-    """try to split group.
-    if group can be splited, return splited groups
-    else return {}
-    """
-    if _DEBUG:
-        print 'Begin to split %s' % group.value
-    member = group.member
-    value = group.value
-    level = group.level
+def pick_node(group):
     groups = {}
-    # todo
-    for t in value:
-        if len(gl_att_tree[t].child) != 0:
-            break
-    else:
-        return groups
-    index = value.index(t)
-    tlevel = level[index] + 1
-    while member:
-        temp = member.pop()
-        vsplit = belong(temp, value[index], tlevel)
-        if vsplit == '':
-            pdb.set_trace()
-        gvalue = value[:]
-        glevel = level[:]
-        vtemp = vsplit.split(';')
-        del gvalue[index]
-        del glevel[index]
-        for t in vtemp:
-            if t != '':
-                gvalue.insert(index,t)
-                glevel.insert(index,tlevel)
-        if _DEBUG:
-            print 'parent=%s' % gvalue
-        v = ';'.join(gvalue)
-        if not v in groups:
-            groups[v] = Group([temp], gvalue, glevel)
-        else:
-            groups[v].member.append(temp)
+
     return groups
+
+def distribute_data(trans, groups):
+    return
 
 
 def iloss(tran, middle):
@@ -109,70 +54,6 @@ def iloss(tran, middle):
     return iloss
 
 
-def middle(tran1, tran2):
-    """return gen result of two tran1
-    """
-    treemark1 = {}
-    treemark2 = {}
-    trantemp = []
-    alltran = tran1[:]
-    alltran.extend(tran2)
-    # mark the gen tree with red color
-    for t in tran1:
-        treemark1[t] = 1
-        ptemp = gl_att_tree[t].parent
-        for pt in ptemp:
-            if not pt.value in treemark1:
-                treemark1[pt.value] = 1
-            else:
-                treemark1[pt.value] += 1
-    # check the other color
-    for t in tran2:
-        if treemark1.has_key(t):
-            if not t in trantemp:
-                trantemp.append(t)
-        treemark2[t] = 1
-        ptemp = gl_att_tree[t].parent
-        for pt in ptemp:
-            if not pt.value in treemark2:
-                treemark2[pt.value] = 1
-            else:
-                treemark2[pt.value] += 1
-            if treemark1.has_key(pt.value):
-                if not pt.value in trantemp:
-                    trantemp.append(pt.value)
-    if len(trantemp) <= 1:
-        return trantemp
-    trantemp.sort(cmp=node_cmp, reverse=True)
-    dellist = []
-    for t in trantemp:
-        ptemp = gl_att_tree[t].child
-        checklist = []
-        for pt in ptemp:
-            if pt.value in trantemp:
-                checklist.append(pt.value)
-        if t in dellist:
-            for pt in checklist:
-                dellist.append(pt)
-            continue
-        sum1 = 0
-        sum2 = 0
-        for pt in checklist:
-            sum1 += treemark1[pt]
-            sum2 += treemark2[pt]
-        if sum1 == treemark1[t] and sum2 == treemark2[t]:
-            dellist.append(t)
-        else:
-            for pt in checklist:
-                dellist.append(pt)
-    for t in dellist:
-        try:
-            trantemp.remove(t)
-        except:
-            print "Error!! When del value according to dellist "
-            pdb.set_trace()
-    return trantemp
-
 
 #fuctions for residue assignment and merge
 def distance(value, middle):
@@ -190,33 +71,9 @@ def setalliloss(groups):
         gloss = 0.0
         for mtemp in gtemp.member:
             gloss = gloss + iloss(mtemp, gtemp.value)
-        gtemp.gloss = gloss
+        gtemp.iloss = gloss
         alliloss += gloss
     return alliloss
-
-
-def rassignment(suppress, result):
-    """residue assigment step. 
-    """
-    #merge with themselves
-    while suppress:
-        temp = suppress.popitem()
-        mindis = 10000000000
-        minindex = ''
-        minmiddle = ['*']
-        for k, v in result.iteritems():
-            mtemp = middle(temp[1].value, v.value)
-            dtemp = len(temp[1].member) * distance(temp[1].value, mtemp) + len(v.member) * distance(v.value, mtemp)
-            if dtemp < mindis:
-                mindis = dtemp
-                minindex = k
-                minmiddle = mtemp
-        result[minindex].merge_group(temp[1], minmiddle)
-    # update group middle
-    for k, v in result.iteritems():
-        temp = ';'.join(v.value)
-        result[temp] = result.pop(k)
-    return 
 
 
 def partition(K, att_tree, data):
