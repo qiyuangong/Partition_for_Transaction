@@ -41,7 +41,7 @@ class GenTree(object):
         return self.cover[value]
 
 
-class Group:
+class Bucket:
 
     """Class for Group, which is used to keep records 
     Store tree node in instances.
@@ -56,6 +56,7 @@ class Group:
         self.member = data
         self.value = value[:]
         self.level = level[:]
+        self.leftover = []
 
     def merge_group(self, guest, middle):
         "merge guest into hostgourp"

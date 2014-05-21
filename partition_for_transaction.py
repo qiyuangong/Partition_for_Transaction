@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-from generalization import Group, GenTree
+from generalization import Bucket, GenTree
 import random
 import pdb
 
@@ -25,12 +25,20 @@ def node_cmp(node1, node2):
     else:
         return (node1 > node2)
 
-def pick_node(group):
-    groups = {}
 
-    return groups
+def information_gain():
+    """get information gain from buckets
+    """
+    ig = 0.0
+    return ig
 
-def distribute_data(trans, groups):
+
+def pick_node(bucket):
+    buckets = {}
+
+    return buckets
+
+def distribute_data(trans, buckets):
     return
 
 
@@ -54,20 +62,11 @@ def iloss(tran, middle):
     return iloss
 
 
-
-#fuctions for residue assignment and merge
-def distance(value, middle):
-    """return distance between two keys(groups)
-    """
-    temp = iloss(value, middle)
-    return temp
-
-
-def setalliloss(groups):
-    """return iloss sum of groups, recompute iloss foreach group
+def setalliloss(buckets):
+    """return iloss sum of buckets, recompute iloss foreach bucket
     """
     alliloss = 0.0
-    for k, gtemp in groups.iteritems():
+    for k, gtemp in buckets.iteritems():
         gloss = 0.0
         for mtemp in gtemp.member:
             gloss = gloss + iloss(mtemp, gtemp.value)
@@ -86,24 +85,24 @@ def partition(K, att_tree, data):
         if v.support == 0:
             treelist[k] = [t.value for t in v.parent]
             treelist[k].insert(0, k) 
-    groups = {'*':Group(data,['*'],[0])}
+    buckets = {'*':Bucket(data,['*'],[0])}
     result = {}
     suppcount = 0
     suppress = {}
     print '-'*30
     print "K=%d" % K
-    while groups:
-        itemp = groups.popitem()
+    while buckets:
+        itemp = buckets.popitem()
         gstemp = splitgroup(itemp[1])
         if len(gstemp) != 0:
             for k, gtemp in gstemp.iteritems():
                 if len(gtemp.member) >= 2*K:
-                    if k not in groups:
-                        groups[k] = gtemp
+                    if k not in buckets:
+                        buckets[k] = gtemp
                     else:
                         # todo
                         # pdb.set_trace()
-                        groups[k] = merge_group(gtemp, ['*'])
+                        buckets[k] = merge_group(gtemp, ['*'])
                 elif len(gtemp.member) < K:
                     suppcount = suppcount + 1
                     suppress[k] = gtemp
@@ -117,7 +116,7 @@ def partition(K, att_tree, data):
     # set and get iloss
     loss = setalliloss(result)
     if _DEBUG:
-        print "Group size %d" % len(result)
+        print "Number of buckets %d" % len(result)
         print "resultcount = %d" % len(result)
         print '*' * 10
         print "iloss = %d" % loss
