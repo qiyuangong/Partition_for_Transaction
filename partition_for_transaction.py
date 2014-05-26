@@ -34,9 +34,22 @@ def information_gain():
 
 
 def pick_node(bucket):
+    valuelist = []
+    mini_ig = 100000000000
+    mini_value = ''
+    for t in bucket.value:
+        if len(gl_att_tree(t).child) != 0:
+            ig = information_gain(bucket, value)
+            if ig < mini_ig:
+                ig = mini_ig
+                mini_value = t
+    if mini_value == '':
+        return ''
+    else:
+        return mini_value
     buckets = {}
-
     return buckets
+
 
 def distribute_data(trans, buckets):
     return
