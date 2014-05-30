@@ -4,10 +4,11 @@
 from generalization import Bucket, GenTree
 import random
 import pdb
+from itertools import combinations
 
 
 _DEBUG = True
-treelist = {}
+gl_treelist = {}
 gl_att_tree = {}
 treesupport = 0
 
@@ -26,32 +27,51 @@ def node_cmp(node1, node2):
         return (node1 > node2)
 
 
-def information_gain():
-    """get information gain from buckets
+def information_gain(bucket, pick_value=''):
+    """get information gain from bucket accroding to pick_value
     """
     ig = 0.0
+    parent_value = bucket.value
+    cover_number = 0
+    ncp = 1.0 * len(gl_att_tree(pick_value).child) / \
+        len(gl_att_tree(parent_value).child)
+    for temp in bucket.member:
+        for t in temp:
+            if pick_value in gl_treelist(t):
+                cover_number += 1
+    ig = ncp * cover_number
     return ig
 
 
 def pick_node(bucket):
+    """find the split node with largest information gain. 
+    Then split bucket to buckets accroding to this node.
+    """
     valuelist = []
-    mini_ig = 100000000000
-    mini_value = ''
+    max_ig = 100000000000
+    max_value = ''
+    buckets = []
     for t in bucket.value:
         if len(gl_att_tree(t).child) != 0:
-            ig = information_gain(bucket, value)
-            if ig < mini_ig:
-                ig = mini_ig
-                mini_value = t
-    if mini_value == '':
-        return ''
-    else:
-        return mini_value
-    buckets = {}
+            ig = information_gain(bucket, t)
+            if ig > max_ig:
+                ig = max_ig
+                max_value = t
+    # begin to expand node on pick_value
+    if max_value != '':
+        child_value = [t.value for t in gl_att_tree(max_value).child]
+        result_list = combinations(child_value)
+        result_list = list(set(result_list))
+        for t in result_list:
+            t = t.sort(cmp=node_cmp,reverse=True)
+            buckets.append(Bucket([], t, bucket.level+1))
     return buckets
 
 
-def distribute_data(trans, buckets):
+def distribute_data(parent_bucket, buckets):
+    data = parent_bucket.data[:]
+    for temp in data:
+        
     return
 
 
@@ -91,13 +111,13 @@ def setalliloss(buckets):
 def partition(K, att_tree, data):
     """partition tran part of microdata
     """
-    global treesupport, treelist, gl_att_tree
+    global treesupport, gl_treelist, gl_att_tree
     gl_att_tree = att_tree
     treesupport = gl_att_tree['*'].support
     for k, v in gl_att_tree.iteritems():
         if v.support == 0:
-            treelist[k] = [t.value for t in v.parent]
-            treelist[k].insert(0, k) 
+            gl_treelist[k] = [t.value for t in v.parent]
+            gl_treelist[k].insert(0, k) 
     buckets = {'*':Bucket(data,['*'],[0])}
     result = {}
     suppcount = 0
