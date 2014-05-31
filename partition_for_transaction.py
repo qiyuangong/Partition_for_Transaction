@@ -50,7 +50,7 @@ def pick_node(bucket):
     valuelist = []
     max_ig = 100000000000
     max_value = ''
-    buckets = []
+    buckets = {}
     for t in bucket.value:
         if len(gl_att_tree(t).child) != 0:
             ig = information_gain(bucket, t)
@@ -62,17 +62,29 @@ def pick_node(bucket):
         child_value = [t.value for t in gl_att_tree(max_value).child]
         result_list = combinations(child_value)
         result_list = list(set(result_list))
+        # todo: check the result
         for t in result_list:
             t = t.sort(cmp=node_cmp,reverse=True)
-            buckets.append(Bucket([], t, bucket.level+1))
+            str_value = ''.join(t)
+            buckets[str_value] = Bucket([], t, bucket.level+1))
     return buckets
 
 
 def distribute_data(parent_bucket, buckets):
     data = parent_bucket.data[:]
+    parent_value = parent_bucket.value
+    parent_level = parent_bucket.level
     for temp in data:
-        
-    return
+        cover_list = []
+        for t in temp:
+            if parent_value in gl_treelist(t):
+                cover_list.append(gl_treelist(t)[-1 *(parent_level+2)])
+        str_value = ''.join(cover_list)
+        try:
+            buckets[str_value].member.append()
+        except:
+            print "ERROR: Cannot find key."
+    return buckets
 
 
 def iloss(tran, middle):
