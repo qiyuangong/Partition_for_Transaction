@@ -33,13 +33,23 @@ def information_gain(bucket, pick_value=''):
     ig = 0.0
     parent_value = bucket.value
     cover_number = 0
-    ncp = 1.0 * len(gl_att_tree(pick_value).child) / \
-        len(gl_att_tree(parent_value).child)
-    for temp in bucket.member:
-        for t in temp:
-            if pick_value in gl_treelist(t):
-                cover_number += 1
-    ig = ncp * cover_number
+    if pick_value == '':
+        # compute bucket's information gain
+        ncp = 1.0 *  / len(gl_att_tree(parent_value).child)
+        for temp in bucket.member:
+            for t in temp:
+                if parent_value in gl_treelist(t):
+                ig += ncp * len(gl_att_tree(t).child)
+    else:
+        # Herein, all ncp will be divided by the same denominator.
+        # So I don't computing true ncp, only use numerator part. 
+        ncp = 1.0 * len(gl_att_tree(pick_value).child) / \
+            len(gl_att_tree(parent_value).child)
+        for temp in bucket.member:
+            for t in temp:
+                if pick_value in gl_treelist(t):
+                    cover_number += 1
+        ig = ncp * cover_number
     return ig
 
 
@@ -64,13 +74,16 @@ def pick_node(bucket):
         result_list = list(set(result_list))
         # todo: check the result
         for t in result_list:
-            t = t.sort(cmp=node_cmp,reverse=True)
+            t.sort(cmp=node_cmp,reverse=True)
             str_value = ''.join(t)
             buckets[str_value] = Bucket([], t, bucket.level+1))
     return buckets
 
 
 def distribute_data(parent_bucket, buckets):
+    """distribute records from parent_bucket to buckets (splited buckets)
+    accroding to records elements.
+    """
     data = parent_bucket.data[:]
     parent_value = parent_bucket.value
     parent_level = parent_bucket.level
@@ -79,12 +92,41 @@ def distribute_data(parent_bucket, buckets):
         for t in temp:
             if parent_value in gl_treelist(t):
                 cover_list.append(gl_treelist(t)[-1 *(parent_level+2)])
+        # sort to ensure the order
+        cover_list.sort(cmp=node_cmp,reverse=True)
         str_value = ''.join(cover_list)
         try:
             buckets[str_value].member.append()
         except:
             print "ERROR: Cannot find key."
     return buckets
+
+
+def balance_partitions(parent_bucket, buckets, K):
+    """handel buckets with less than K records
+    """
+    left_over = []
+    for k, t in buckets.iteritems():
+        if len(t.member) < K:
+            # add records of buckets with less than K elemnts
+            # to left_over partition
+            left_over.expand(t.member)
+            del buckets[k]
+    if len(left_over) < K:
+        # re-distribute bucket with least information gain to left_over
+        # to enshure number of records in left_over is larger than K
+        min_ig = 10000000000000000
+        min_bucket = None
+        min_key = ''
+        for k, t in buckets.iteritems():
+            ig = information_gain(t)
+            if ig < min_ig:
+                min_ig = ig
+                min_bucket = t
+                min_key = k
+        left_over.expand(min_bucket.member)
+        del buckets[min_key]
+    parent_bucket.member = left_over[:]
 
 
 def iloss(tran, middle):
