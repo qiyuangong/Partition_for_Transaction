@@ -57,6 +57,7 @@ class Bucket:
         self.value = value[:]
         self.level = level[:]
         self.leftover = []
+        self.splitable = True
 
     def merge_group(self, guest, middle):
         "merge guest into hostgourp"

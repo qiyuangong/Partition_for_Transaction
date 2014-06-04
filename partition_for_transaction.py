@@ -11,7 +11,7 @@ _DEBUG = True
 gl_treelist = {}
 gl_att_tree = {}
 treesupport = 0
-
+gl_result = []
 
 # compare fuction for sort tree node
 def node_cmp(node1, node2):
@@ -35,19 +35,19 @@ def information_gain(bucket, pick_value=''):
     cover_number = 0
     if pick_value == '':
         # compute bucket's information gain
-        ncp = 1.0 *  / len(gl_att_tree(parent_value).child)
+        ncp = 1.0 / len(gl_att_tree[parent_value].child)
         for temp in bucket.member:
             for t in temp:
-                if parent_value in gl_treelist(t):
-                ig += ncp * len(gl_att_tree(t).child)
+                if parent_value in gl_treelist[t]:
+                    ig += ncp * len(gl_att_tree[t].child)
     else:
         # Herein, all ncp will be divided by the same denominator.
         # So I don't computing true ncp, only use numerator part. 
-        ncp = 1.0 * len(gl_att_tree(pick_value).child) / \
-            len(gl_att_tree(parent_value).child)
+        ncp = 1.0 * len(gl_att_tree[pick_value].child) / \
+            len(gl_att_tree[parent_value].child)
         for temp in bucket.member:
             for t in temp:
-                if pick_value in gl_treelist(t):
+                if pick_value in gl_treelist[t]:
                     cover_number += 1
         ig = ncp * cover_number
     return ig
@@ -62,21 +62,21 @@ def pick_node(bucket):
     max_value = ''
     buckets = {}
     for t in bucket.value:
-        if len(gl_att_tree(t).child) != 0:
+        if len(gl_att_tree[t].child) != 0:
             ig = information_gain(bucket, t)
             if ig > max_ig:
                 ig = max_ig
                 max_value = t
     # begin to expand node on pick_value
     if max_value != '':
-        child_value = [t.value for t in gl_att_tree(max_value).child]
+        child_value = [t.value for t in gl_att_tree[max_value].child]
         result_list = combinations(child_value)
         result_list = list(set(result_list))
         # todo: check the result
         for t in result_list:
             t.sort(cmp=node_cmp,reverse=True)
             str_value = ''.join(t)
-            buckets[str_value] = Bucket([], t, bucket.level+1))
+            buckets[str_value] = Bucket([], t, bucket.level+1)
     return buckets
 
 
@@ -90,8 +90,8 @@ def distribute_data(parent_bucket, buckets):
     for temp in data:
         cover_list = []
         for t in temp:
-            if parent_value in gl_treelist(t):
-                cover_list.append(gl_treelist(t)[-1 *(parent_level+2)])
+            if parent_value in gl_treelist[t]:
+                cover_list.append(gl_treelist[t][-1 *(parent_level+2)])
         # sort to ensure the order
         cover_list.sort(cmp=node_cmp,reverse=True)
         str_value = ''.join(cover_list)
@@ -127,6 +127,8 @@ def balance_partitions(parent_bucket, buckets, K):
         left_over.expand(min_bucket.member)
         del buckets[min_key]
     parent_bucket.member = left_over[:]
+    if len(buckets) == 0:
+        parent_bucket.splitable = False
 
 
 def iloss(tran, middle):
@@ -172,47 +174,44 @@ def partition(K, att_tree, data):
         if v.support == 0:
             gl_treelist[k] = [t.value for t in v.parent]
             gl_treelist[k].insert(0, k) 
-    buckets = {'*':Bucket(data,['*'],[0])}
+    # bucket = {'*':Bucket(data,['*'],[0])}
     result = {}
     suppcount = 0
     suppress = {}
     print '-'*30
     print "K=%d" % K
-    while buckets:
-        itemp = buckets.popitem()
-        gstemp = splitgroup(itemp[1])
-        if len(gstemp) != 0:
-            for k, gtemp in gstemp.iteritems():
-                if len(gtemp.member) >= 2*K:
-                    if k not in buckets:
-                        buckets[k] = gtemp
-                    else:
-                        # todo
-                        # pdb.set_trace()
-                        buckets[k] = merge_group(gtemp, ['*'])
-                elif len(gtemp.member) < K:
-                    suppcount = suppcount + 1
-                    suppress[k] = gtemp
-                else:
-                    result[k] = gtemp
-        else:
-            if _DEBUG:
-                print itemp[0] + " cannot be split" 
-            result[itemp[0]] = itemp[1]
+
+    anonymize(Bucket(data,['*'],[0]), K)
+
     print "Publishing Result Data..."
     # set and get iloss
-    loss = setalliloss(result)
-    if _DEBUG:
-        print "Number of buckets %d" % len(result)
-        print "resultcount = %d" % len(result)
-        print '*' * 10
-        print "iloss = %d" % loss
-        print "suppress = %s" % suppcount
-        print "Residue assigment..."
-    rassignment(suppress, result)
-    # get iloss
-    loss = setalliloss(result)
-    print "iloss = %d" % loss
-    print "suppress = %s" % len(suppress)
-    return result
+    pdb.set_trace()
+    # todo 
+    # loss = setalliloss(result)
+    # if _DEBUG:
+    #     print "Number of buckets %d" % len(result)
+    #     print "resultcount = %d" % len(result)
+    #     print '*' * 10
+    #     print "iloss = %d" % loss
+    #     print "suppress = %s" % suppcount
+    #     print "Residue assigment..."
+    # rassignment(suppress, result)
+    # # get iloss
+    # loss = setalliloss(result)
+    # print "iloss = %d" % loss
+    # print "suppress = %s" % len(suppress)
+    # return result
+
+
+def anonymize(bucket, K):
+    if bucket.splitable == False:
+        gl_result.append(bucket)
+        return
+    expandNode = pick_node(bucket)
+    distribute_data(bcuket, expandNode)
+    balance_partitions(bcuket, expandNode, K)
+    for t in expandNode.keys:
+        anonymize(t, K)
+
+    
     
