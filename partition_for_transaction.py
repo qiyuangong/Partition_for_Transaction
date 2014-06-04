@@ -35,16 +35,15 @@ def information_gain(bucket, pick_value=''):
     cover_number = 0
     if pick_value == '':
         # compute bucket's information gain
-        ncp = 1.0 / len(gl_att_tree[parent_value].child)
+        ncp = 1.0 
         for temp in bucket.member:
             for t in temp:
-                if parent_value in gl_treelist[t]:
+                if pick_value in gl_treelist[t]:
                     ig += ncp * len(gl_att_tree[t].child)
     else:
         # Herein, all ncp will be divided by the same denominator.
         # So I don't computing true ncp, only use numerator part. 
-        ncp = 1.0 * len(gl_att_tree[pick_value].child) / \
-            len(gl_att_tree[parent_value].child)
+        ncp = 1.0 * len(gl_att_tree[pick_value].child) 
         for temp in bucket.member:
             for t in temp:
                 if pick_value in gl_treelist[t]:
@@ -58,25 +57,40 @@ def pick_node(bucket):
     Then split bucket to buckets accroding to this node.
     """
     valuelist = []
-    max_ig = 100000000000
+    max_ig = -10000
     max_value = ''
     buckets = {}
+    result_list = []
     for t in bucket.value:
         if len(gl_att_tree[t].child) != 0:
             ig = information_gain(bucket, t)
             if ig > max_ig:
                 ig = max_ig
                 max_value = t
+    index = bucket.value.index(max_value)
     # begin to expand node on pick_value
     if max_value != '':
         child_value = [t.value for t in gl_att_tree[max_value].child]
-        result_list = combinations(child_value)
-        result_list = list(set(result_list))
+        for i in range(2, len(child_value)):
+            temp = combinations(child_value, i)
+            result_list.extend(list(set(temp)))
         # todo: check the result
         for t in result_list:
-            t.sort(cmp=node_cmp,reverse=True)
-            str_value = ''.join(t)
-            buckets[str_value] = Bucket([], t, bucket.level+1)
+            t = list(t)
+            t.sort()
+        result_list.extend(child_value)
+        # generate chlid buckets
+        for temp in result_list:
+            child_level = bucket.level[:]
+            child_value = bucket.value[:]
+            now_level = bucket.level[index]
+            del child_level[index]
+            del child_value[index]
+            for t in temp:
+                child_level.insert(index, now_level)
+                child_value.insert(index, t)
+            str_value = ';'.join(child_value)
+            buckets[str_value] = Bucket([], child_value, child_level)
     return buckets
 
 
@@ -84,7 +98,9 @@ def distribute_data(parent_bucket, buckets):
     """distribute records from parent_bucket to buckets (splited buckets)
     accroding to records elements.
     """
-    data = parent_bucket.data[:]
+    if len(buckets) == 0:
+        return
+    data = parent_bucket.member[:]
     parent_value = parent_bucket.value
     parent_level = parent_bucket.level
     for temp in data:
@@ -93,13 +109,15 @@ def distribute_data(parent_bucket, buckets):
             if parent_value in gl_treelist[t]:
                 cover_list.append(gl_treelist[t][-1 *(parent_level+2)])
         # sort to ensure the order
-        cover_list.sort(cmp=node_cmp,reverse=True)
-        str_value = ''.join(cover_list)
+        cover_list.sort()
+        # str_value = ';'.join(cover_list)
+        str_value =
         try:
             buckets[str_value].member.append()
         except:
+            pdb.set_trace()
             print "ERROR: Cannot find key."
-    return buckets
+    # return buckets
 
 
 def balance_partitions(parent_bucket, buckets, K):
@@ -124,7 +142,12 @@ def balance_partitions(parent_bucket, buckets, K):
                 min_ig = ig
                 min_bucket = t
                 min_key = k
-        left_over.expand(min_bucket.member)
+        if min_key == '':
+            return
+        try:
+            left_over.extend(min_bucket.member)
+        except:
+            pdb.set_trace()
         del buckets[min_key]
     parent_bucket.member = left_over[:]
     if len(buckets) == 0:
@@ -185,7 +208,6 @@ def partition(K, att_tree, data):
 
     print "Publishing Result Data..."
     # set and get iloss
-    pdb.set_trace()
     # todo 
     # loss = setalliloss(result)
     # if _DEBUG:
@@ -208,9 +230,9 @@ def anonymize(bucket, K):
         gl_result.append(bucket)
         return
     expandNode = pick_node(bucket)
-    distribute_data(bcuket, expandNode)
-    balance_partitions(bcuket, expandNode, K)
-    for t in expandNode.keys:
+    distribute_data(bucket, expandNode)
+    balance_partitions(bucket, expandNode, K)
+    for t in expandNode.keys():
         anonymize(t, K)
 
     
