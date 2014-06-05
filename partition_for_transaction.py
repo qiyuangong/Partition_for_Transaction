@@ -131,7 +131,6 @@ def distribute_data(bucket, buckets, pick_value):
             pdb.set_trace()
             print "ERROR: Cannot find key."
     # pdb.set_trace()
-    # return buckets
 
 
 def balance_partitions(parent_bucket, buckets, K):
@@ -167,7 +166,31 @@ def balance_partitions(parent_bucket, buckets, K):
     if len(left_over):  
         parent_bucket.member = left_over[:]
         gl_result.append(parent_bucket)
-    # pdb.set_trace()
+
+
+def check_splitable(bucket):
+    """check if bucket can further drill down
+    """
+    if bucket.splitable:
+        for t in bucket.value:
+            if len(gl_att_tree[t].child) != 0:
+                return True
+        bucket.splitable = False
+    return False
+
+
+def anonymize(bucket, K):
+    """recursively split dataset to create anonymization buckets 
+    """
+    global gl_result
+    if check_splitable(bucket) == False:
+        gl_result.append(bucket)
+        return
+    (pick_value, expandNode) = pick_node(bucket)
+    distribute_data(bucket, expandNode, pick_value)
+    balance_partitions(bucket, expandNode, K)
+    for t in expandNode.values():
+        anonymize(t, K)
 
 
 def iloss(tran, middle):
@@ -194,7 +217,7 @@ def setalliloss(buckets):
     """return iloss sum of buckets, recompute iloss foreach bucket
     """
     alliloss = 0.0
-    for k, gtemp in buckets.iteritems():
+    for gtemp in buckets:
         gloss = 0.0
         for mtemp in gtemp.member:
             gloss = gloss + iloss(mtemp, gtemp.value)
@@ -220,47 +243,12 @@ def partition(K, att_tree, data):
     print '-'*30
     print "K=%d" % K
     anonymize(Bucket(data,['*'],[0]), K)
-    pdb.set_trace()
-    return gl_result
     print "Publishing Result Data..."
     # set and get iloss
-    # todo 
-    # loss = setalliloss(result)
-    # if _DEBUG:
-    #     print "Number of buckets %d" % len(result)
-    #     print "resultcount = %d" % len(result)
-    #     print '*' * 10
-    #     print "iloss = %d" % loss
-    #     print "suppress = %s" % suppcount
-    #     print "Residue assigment..."
-    # rassignment(suppress, result)
-    # # get iloss
-    # loss = setalliloss(result)
-    # print "iloss = %d" % loss
-    # print "suppress = %s" % len(suppress)
-    # return result
-
-def check_splitable(bucket):
-    """check if bucket can further drill down
-    """
-    if bucket.splitable:
-        for t in bucket.value:
-            if len(gl_att_tree[t].child) != 0:
-                return True
-        bucket.splitable = False
-    return False
-
-
-def anonymize(bucket, K):
-    global gl_result
-    if check_splitable(bucket) == False:
-        gl_result.append(bucket)
-        return
-    (pick_value, expandNode) = pick_node(bucket)
-    distribute_data(bucket, expandNode, pick_value)
-    balance_partitions(bucket, expandNode, K)
-    for t in expandNode.values():
-        anonymize(t, K)
-
-    
-    
+    all_loss = setalliloss(gl_result)
+    # pdb.set_trace()
+    if _DEBUG:
+        print "Number of buckets %d" % len(gl_result)
+        print '*' * 10
+        print "iloss = %d" % all_loss
+    return gl_result
