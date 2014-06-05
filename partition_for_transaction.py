@@ -33,22 +33,24 @@ def information_gain(bucket, pick_value=''):
     ig = 0.0
     parent_value = bucket.value
     cover_number = 0
+    # Herein, all ncp will be divided by the same denominator.
+    # So I don't computing true ncp, only use numerator part. 
     if pick_value == '':
+        for gen_value in bucket.value:
+            ncp = 1.0 * len(gl_att_tree[gen_value].child) 
+            cover_number = 0
+            for temp in bucket.member:
+                for t in temp:
+                    if gen_value in gl_treelist[t]:
+                        cover_number += 1
+            ig += ncp * cover_number
+    else:
         # compute bucket's information gain
-        ncp = 1.0 
+        ncp = ncp = 1.0 * len(gl_att_tree[pick_value].child) 
         for temp in bucket.member:
             for t in temp:
                 if pick_value in gl_treelist[t]:
                     ig += ncp * len(gl_att_tree[t].child)
-    else:
-        # Herein, all ncp will be divided by the same denominator.
-        # So I don't computing true ncp, only use numerator part. 
-        ncp = 1.0 * len(gl_att_tree[pick_value].child) 
-        for temp in bucket.member:
-            for t in temp:
-                if pick_value in gl_treelist[t]:
-                    cover_number += 1
-        ig = ncp * cover_number
     return ig
 
 
@@ -128,20 +130,20 @@ def distribute_data(bucket, buckets, pick_value):
         except:
             pdb.set_trace()
             print "ERROR: Cannot find key."
-        # clear parent bucket
-        data = []
+    # pdb.set_trace()
     # return buckets
 
 
 def balance_partitions(parent_bucket, buckets, K):
     """handel buckets with less than K records
     """
+    global gl_result
     left_over = []
     for k, t in buckets.items():
         if len(t.member) < K:
             # add records of buckets with less than K elemnts
             # to left_over partition
-            left_over.extend(t.member)
+            left_over.extend(t.member[:])
             del buckets[k]
     if len(left_over) < K:
         # re-distribute bucket with least information gain to left_over
@@ -158,13 +160,14 @@ def balance_partitions(parent_bucket, buckets, K):
         if min_key == '':
             return
         try:
-            left_over.extend(min_bucket.member)
+            left_over.extend(min_bucket.member[:])
         except:
             pdb.set_trace()
         del buckets[min_key]
-    parent_bucket.member = left_over[:]
-    if len(buckets) == 0:
-        parent_bucket.splitable = False
+    if len(left_over):  
+        parent_bucket.member = left_over[:]
+        gl_result.append(parent_bucket)
+    # pdb.set_trace()
 
 
 def iloss(tran, middle):
@@ -216,9 +219,9 @@ def partition(K, att_tree, data):
     suppress = {}
     print '-'*30
     print "K=%d" % K
-
     anonymize(Bucket(data,['*'],[0]), K)
-
+    pdb.set_trace()
+    return gl_result
     print "Publishing Result Data..."
     # set and get iloss
     # todo 
@@ -237,16 +240,23 @@ def partition(K, att_tree, data):
     # print "suppress = %s" % len(suppress)
     # return result
 
+def check_splitable(bucket):
+    """check if bucket can further drill down
+    """
+    if bucket.splitable:
+        for t in bucket.value:
+            if len(gl_att_tree[t].child) != 0:
+                return True
+        bucket.splitable = False
+    return False
+
 
 def anonymize(bucket, K):
-    if bucket.splitable == False:
+    global gl_result
+    if check_splitable(bucket) == False:
         gl_result.append(bucket)
         return
     (pick_value, expandNode) = pick_node(bucket)
-    if pick_value == '':
-        bucket.splitable = False
-        gl_result.append(bucket)
-        return
     distribute_data(bucket, expandNode, pick_value)
     balance_partitions(bucket, expandNode, K)
     for t in expandNode.values():
