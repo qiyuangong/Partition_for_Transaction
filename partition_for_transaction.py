@@ -67,56 +67,69 @@ def pick_node(bucket):
             if ig > max_ig:
                 ig = max_ig
                 max_value = t
-    index = bucket.value.index(max_value)
     # begin to expand node on pick_value
     if max_value != '':
+        index = bucket.value.index(max_value)
         child_value = [t.value for t in gl_att_tree[max_value].child]
-        for i in range(2, len(child_value)):
+        for i in range(1, len(child_value)+1):
             temp = combinations(child_value, i)
-            result_list.extend(list(set(temp)))
-        # todo: check the result
-        for t in result_list:
-            t = list(t)
-            t.sort()
-        result_list.extend(child_value)
+            temp = [list(t) for t in temp]
+            result_list.extend(temp)
         # generate chlid buckets
         for temp in result_list:
             child_level = bucket.level[:]
             child_value = bucket.value[:]
-            now_level = bucket.level[index]
+            now_level = bucket.level[index] + 1
             del child_level[index]
             del child_value[index]
             for t in temp:
                 child_level.insert(index, now_level)
                 child_value.insert(index, t)
-            str_value = ';'.join(child_value)
+            hash_value = child_value[:]
+            hash_value.sort()
+            str_value = ';'.join(hash_value)
             buckets[str_value] = Bucket([], child_value, child_level)
-    return buckets
+    return (max_value, buckets)
 
 
-def distribute_data(parent_bucket, buckets):
+def distribute_data(bucket, buckets, pick_value):
     """distribute records from parent_bucket to buckets (splited buckets)
     accroding to records elements.
     """
     if len(buckets) == 0:
         return
-    data = parent_bucket.member[:]
-    parent_value = parent_bucket.value
-    parent_level = parent_bucket.level
+    data = bucket.member[:]
+    parent_level = bucket.level[:]
+    parent_value = bucket.value[:]
     for temp in data:
-        cover_list = []
+        gen_list = []
         for t in temp:
-            if parent_value in gl_treelist[t]:
-                cover_list.append(gl_treelist[t][-1 *(parent_level+2)])
+            treelist = gl_treelist[t]
+            try:
+                pos = treelist.index(pick_value)
+                # if covered, then replaced with new value
+                gen_list.append(treelist[pos-1])
+            except:
+                # todo uncovered eleements
+                gen_value = ''
+                for t in parent_level:
+                    if t > len(treelist):
+                        continue
+                    gen_value = treelist[-1-t]
+                    if gen_value in parent_value:
+                        gen_list.append(gen_value)
+                        break
+        gen_list = list(set(gen_list))
         # sort to ensure the order
-        cover_list.sort()
-        # str_value = ';'.join(cover_list)
-        str_value =
+        gen_list.sort()
+        str_value = ';'.join(gen_list)
         try:
-            buckets[str_value].member.append()
+            buckets[str_value].member.append(temp)
         except:
             pdb.set_trace()
             print "ERROR: Cannot find key."
+        # clear parent bucket
+        data = []
     # return buckets
 
 
@@ -124,11 +137,11 @@ def balance_partitions(parent_bucket, buckets, K):
     """handel buckets with less than K records
     """
     left_over = []
-    for k, t in buckets.iteritems():
+    for k, t in buckets.items():
         if len(t.member) < K:
             # add records of buckets with less than K elemnts
             # to left_over partition
-            left_over.expand(t.member)
+            left_over.extend(t.member)
             del buckets[k]
     if len(left_over) < K:
         # re-distribute bucket with least information gain to left_over
@@ -229,10 +242,14 @@ def anonymize(bucket, K):
     if bucket.splitable == False:
         gl_result.append(bucket)
         return
-    expandNode = pick_node(bucket)
-    distribute_data(bucket, expandNode)
+    (pick_value, expandNode) = pick_node(bucket)
+    if pick_value == '':
+        bucket.splitable = False
+        gl_result.append(bucket)
+        return
+    distribute_data(bucket, expandNode, pick_value)
     balance_partitions(bucket, expandNode, K)
-    for t in expandNode.keys():
+    for t in expandNode.values():
         anonymize(t, K)
 
     
