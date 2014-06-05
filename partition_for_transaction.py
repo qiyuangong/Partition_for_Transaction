@@ -10,7 +10,8 @@ from itertools import combinations
 _DEBUG = True
 gl_treelist = {}
 gl_att_tree = {}
-treesupport = 0
+gl_treesupport = 0
+gl_elementcount = 0
 gl_result = []
 
 # compare fuction for sort tree node
@@ -37,7 +38,7 @@ def information_gain(bucket, pick_value=''):
     # So I don't computing true ncp, only use numerator part. 
     if pick_value == '':
         for gen_value in bucket.value:
-            ncp = 1.0 * len(gl_att_tree[gen_value].child) 
+            ncp = 1.0 * gl_att_tree[gen_value].support
             cover_number = 0
             for temp in bucket.member:
                 for t in temp:
@@ -46,11 +47,11 @@ def information_gain(bucket, pick_value=''):
             ig += ncp * cover_number
     else:
         # compute bucket's information gain
-        ncp = ncp = 1.0 * len(gl_att_tree[pick_value].child) 
+        ncp = 1.0 * gl_att_tree[pick_value].support
         for temp in bucket.member:
             for t in temp:
                 if pick_value in gl_treelist[t]:
-                    ig += ncp * len(gl_att_tree[t].child)
+                    ig += ncp
     return ig
 
 
@@ -201,7 +202,7 @@ def iloss(tran, middle):
         ntemp = gl_att_tree[t]
         checktemp = ntemp.parent[:]
         checktemp.insert(0, ntemp)
-        for i, ptemp in enumerate(checktemp):
+        for ptemp in checktemp:
             if ptemp.value in middle:
                 break
         else:
@@ -209,7 +210,9 @@ def iloss(tran, middle):
             pdb.set_trace()
         if ptemp.value == t:
             continue
-        iloss = iloss + ptemp.support * 1.0 / treesupport
+        iloss = iloss + ptemp.support 
+    # only one attribute is involved, so we can simplfy NCP
+    iloss = iloss * 1.0 / gl_treesupport
     return iloss
 
 
@@ -223,15 +226,18 @@ def setalliloss(buckets):
             gloss = gloss + iloss(mtemp, gtemp.value)
         gtemp.iloss = gloss
         alliloss += gloss
+    alliloss = alliloss * 1.0 / gl_elementcount
     return alliloss
 
 
 def partition(K, att_tree, data):
     """partition tran part of microdata
     """
-    global treesupport, gl_treelist, gl_att_tree
+    global gl_treesupport, gl_treelist, gl_att_tree, gl_elementcount
+    for t in data:
+        gl_elementcount += len(t)
     gl_att_tree = att_tree
-    treesupport = gl_att_tree['*'].support
+    gl_treesupport = gl_att_tree['*'].support
     for k, v in gl_att_tree.iteritems():
         if v.support == 0:
             gl_treelist[k] = [t.value for t in v.parent]
@@ -244,11 +250,12 @@ def partition(K, att_tree, data):
     print "K=%d" % K
     anonymize(Bucket(data,['*'],[0]), K)
     print "Publishing Result Data..."
-    # set and get iloss
-    all_loss = setalliloss(gl_result)
+    # changed to percentage
+    all_loss = 100.0 * setalliloss(gl_result)
     # pdb.set_trace()
     if _DEBUG:
+        print [len(t.member) for t in gl_result]
         print "Number of buckets %d" % len(gl_result)
         print '*' * 10
-        print "iloss = %d" % all_loss
+        print "iloss = %0.2f" % all_loss + "%"
     return gl_result
