@@ -6,7 +6,6 @@
 # condition att ['DUID','DUPERSID','ICD9CODX','year']
 
 from generalization import GenTree
-import pdb
 
 __DEBUG = False
 
@@ -49,13 +48,7 @@ def read_tree_file(treename):
     if __DEBUG:
         print "Nodes No. = %d" % att_tree['*'].support
     treefile.close()
-    return att_tree
-
-
-def read_cat_tree(treename):
-    """read categorial data from tree
-    """
-    
+    return att_tree    
 
 
 def read_data(flag=0):
@@ -83,16 +76,18 @@ def read_data(flag=0):
         bms_webview2 = open('data/BMS-WebView-2.dat', 'rU')
         print "Reading Data..."
         bmwdata = {}
-        for i, line in enumerate(bms_webview2):
+        for line in bms_webview2:
             line = line.strip()
             # ignore first line of csv
             row = line.split('\t')
-            if row[0] in bmwdata.keys():
+            try:
                 bmwdata[row[0]].append(row[1])
-            else:
+            except:
                 bmwdata[row[0]] = [row[1]]
         bms_webview2.close()
         return bmwdata.values()
+        if __DEBUG:
+            print "Read Complete..."
 
 
 
