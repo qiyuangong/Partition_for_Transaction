@@ -124,7 +124,7 @@ def gen_even_BMS_tree(fanout):
     height = int(math.ceil(math.log(len(static_value), fanout)))
     for i, temp in enumerate(static_value):
         node = []
-        for h in range(height-1):
+        for h in range(height):
             if h == 0:
                 temp = '%d' % static_value[i]
             else:    
