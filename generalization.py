@@ -54,6 +54,7 @@ class Bucket:
 
     def __init__(self, data, value = ['*'], level = []):
         self.iloss = 0.0
+        self.split_list = []
         self.member = data
         self.value = value[:]
         self.level = level[:]

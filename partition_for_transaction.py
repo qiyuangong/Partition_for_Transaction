@@ -64,34 +64,37 @@ def pick_node(bucket):
     max_value = ''
     buckets = {}
     result_list = []
-    for t in bucket.value:
+    check_list = [t for t in bucket.value if t not in bucket.split_list]
+    for t in check_list:
         if len(gl_att_tree[t].child) != 0:
             ig = information_gain(bucket, t)
             if ig > max_ig:
                 ig = max_ig
                 max_value = t
     # begin to expand node on pick_value
-    if max_value != '':
-        index = bucket.value.index(max_value)
-        child_value = [t.value for t in gl_att_tree[max_value].child]
-        for i in range(1, len(child_value)+1):
-            temp = combinations(child_value, i)
-            temp = [list(t) for t in temp]
-            result_list.extend(temp)
-        # generate chlid buckets
-        for temp in result_list:
-            child_level = bucket.level[:]
-            child_value = bucket.value[:]
-            now_level = bucket.level[index] + 1
-            del child_level[index]
-            del child_value[index]
-            for t in temp:
-                child_level.insert(index, now_level)
-                child_value.insert(index, t)
-            hash_value = child_value[:]
-            hash_value.sort()
-            str_value = ';'.join(hash_value)
-            buckets[str_value] = Bucket([], child_value, child_level)
+    if max_value == '':
+        print "Error: list empty!!"
+    index = bucket.value.index(max_value)
+    child_value = [t.value for t in gl_att_tree[max_value].child]
+    for i in range(1, len(child_value)+1):
+        temp = combinations(child_value, i)
+        temp = [list(t) for t in temp]
+        result_list.extend(temp)
+    # generate chlid buckets
+    for temp in result_list:
+        child_level = bucket.level[:]
+        child_value = bucket.value[:]
+        now_level = bucket.level[index] + 1
+        del child_level[index]
+        del child_value[index]
+        for t in temp:
+            child_level.insert(index, now_level)
+            child_value.insert(index, t)
+        hash_value = child_value[:]
+        hash_value.sort()
+        str_value = ';'.join(hash_value)
+        buckets[str_value] = Bucket([], child_value, child_level)
+    bucket.split_list.append(max_value)
     return (max_value, buckets)
 
 
@@ -164,16 +167,21 @@ def balance_partitions(parent_bucket, buckets, K):
         except:
             pdb.set_trace()
         del buckets[min_key]
-    if len(left_over):  
+    if len(left_over):
         parent_bucket.member = left_over[:]
-        gl_result.append(parent_bucket)
+        valuelist = parent_bucket.value[:]
+        valuelist.sort()
+        str_value = ';'.join(valuelist)
+        buckets[str_value] = parent_bucket
+        # gl_result.append(parent_bucket)
 
 
 def check_splitable(bucket):
     """check if bucket can further drill down
     """
+    check_list = [t for t in bucket.value if t not in bucket.split_list]
     if bucket.splitable:
-        for t in bucket.value:
+        for t in check_list:
             if len(gl_att_tree[t].child) != 0:
                 return True
         bucket.splitable = False
