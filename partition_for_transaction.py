@@ -37,8 +37,11 @@ def information_gain(bucket, pick_value=''):
     # Herein, all ncp will be divided by the same denominator.
     # So I don't computing true ncp, only use numerator part. 
     if pick_value == '':
+        # compute bucket's information gain
         for gen_value in bucket.value:
-            ncp = 1.0 * gl_att_tree[gen_value].support
+            ncp = gl_att_tree[gen_value].support
+            if ncp == 0:
+                continue
             cover_number = 0
             for temp in bucket.member:
                 for t in temp:
@@ -46,8 +49,10 @@ def information_gain(bucket, pick_value=''):
                         cover_number += 1
             ig += ncp * cover_number
     else:
-        # compute bucket's information gain
-        ncp = 1.0 * gl_att_tree[pick_value].support
+        # pick node's information gain
+        ncp = gl_att_tree[pick_value].support
+        if ncp == 0:
+            return 0
         for temp in bucket.member:
             for t in temp:
                 if pick_value in gl_treelist[t]:
