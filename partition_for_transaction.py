@@ -19,13 +19,12 @@ def node_cmp(node1, node2):
     """compare node1(str) and node2(str)
     Compare two nodes accroding to their support
     """
-    global gl_att_tree
     support1 = gl_att_tree[node1].support
     support2 = gl_att_tree[node2].support
     if  support1 != support2:
         return support1 - support2
     else:
-        return (node1 > node2)
+        return cmp(node1, node2)
 
 
 def information_gain(bucket, pick_value=''):
@@ -95,8 +94,8 @@ def pick_node(bucket):
         for t in temp:
             child_level.insert(index, now_level)
             child_value.insert(index, t)
-        hash_value = child_value[:]
-        hash_value.sort()
+        hash_value = temp[:]
+        hash_value.sort(cmp=node_cmp)
         str_value = ';'.join(hash_value)
         buckets[str_value] = Bucket([], child_value, child_level)
     bucket.split_list.append(max_value)
@@ -121,18 +120,10 @@ def distribute_data(bucket, buckets, pick_value):
                 # if covered, then replaced with new value
                 gen_list.append(treelist[pos-1])
             except:
-                # todo uncovered eleements
-                gen_value = ''
-                for t in parent_level:
-                    if t > len(treelist):
-                        continue
-                    gen_value = treelist[-1-t]
-                    if gen_value in parent_value:
-                        gen_list.append(gen_value)
-                        break
+                continue
         gen_list = list(set(gen_list))
         # sort to ensure the order
-        gen_list.sort()
+        gen_list.sort(cmp=node_cmp)
         str_value = ';'.join(gen_list)
         try:
             buckets[str_value].member.append(temp)
@@ -166,6 +157,7 @@ def balance_partitions(parent_bucket, buckets, K):
                 min_bucket = t
                 min_key = k
         if min_key == '':
+            print "Error: can not re-distribute left over"
             return
         try:
             left_over.extend(min_bucket.member[:])
@@ -175,7 +167,7 @@ def balance_partitions(parent_bucket, buckets, K):
     if len(left_over):
         parent_bucket.member = left_over[:]
         valuelist = parent_bucket.value[:]
-        valuelist.sort()
+        valuelist.sort(cmp=node_cmp)
         str_value = ';'.join(valuelist)
         buckets[str_value] = parent_bucket
         # gl_result.append(parent_bucket)
