@@ -107,6 +107,7 @@ def distribute_data(bucket, buckets, pick_value):
     accroding to records elements.
     """
     if len(buckets) == 0:
+        print "Error: buckets is empty!"
         return
     data = bucket.member[:]
     parent_level = bucket.level[:]
@@ -118,7 +119,10 @@ def distribute_data(bucket, buckets, pick_value):
             try:
                 pos = treelist.index(pick_value)
                 # if covered, then replaced with new value
-                gen_list.append(treelist[pos-1])
+                if pos > 0:
+                    gen_list.append(treelist[pos-1])
+                else:
+                    print "Error: pick node is leaf"
             except:
                 continue
         gen_list = list(set(gen_list))
@@ -129,7 +133,7 @@ def distribute_data(bucket, buckets, pick_value):
             buckets[str_value].member.append(temp)
         except:
             pdb.set_trace()
-            print "ERROR: Cannot find key."
+            print "Error: Cannot find key."
     # pdb.set_trace()
 
 
