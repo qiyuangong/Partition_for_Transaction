@@ -27,6 +27,16 @@ def node_cmp(node1, node2):
         return cmp(node1, node2)
 
 
+def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
+    """covert sorted str list (sorted by cmpfun) to str 
+    value (splited by sep). This fuction is value safe, which means 
+    value_list will not be changed.
+    """
+    temp = value_list[:]
+    temp.sort(cmp=cmpfun)
+    return sep.join(temp)
+
+
 def information_gain(bucket, pick_value=''):
     """get information gain from bucket accroding to pick_value
     """
@@ -97,9 +107,7 @@ def pick_node(bucket):
         for t in temp:
             temp_level.insert(index, now_level)
             temp_value.insert(index, t)
-        hash_value = temp[:]
-        hash_value.sort(cmp=node_cmp)
-        str_value = ';'.join(hash_value)
+        str_value = list_to_str(temp)
         buckets[str_value] = Bucket([], temp_value, temp_level)
     bucket.split_list.append(max_value)
     return (max_value, buckets)
@@ -128,8 +136,7 @@ def distribute_data(bucket, buckets, pick_value):
                 continue
         gen_list = list(set(gen_list))
         # sort to ensure the order
-        gen_list.sort(cmp=node_cmp)
-        str_value = ';'.join(gen_list)
+        str_value = list_to_str(gen_list)
         try:
             buckets[str_value].member.append(temp)
         except:
@@ -149,6 +156,9 @@ def balance_partitions(parent_bucket, buckets, K):
             # to left_over partition
             left_over.extend(t.member[:])
             del buckets[k]
+    if len(left_over) == 0:
+        # left over bucket is empty
+        return
     if len(left_over) < K:
         # re-distribute bucket with least information gain to left_over
         # to enshure number of records in left_over is larger than K
@@ -171,9 +181,7 @@ def balance_partitions(parent_bucket, buckets, K):
         del buckets[min_key]
     if len(left_over):
         parent_bucket.member = left_over[:]
-        valuelist = parent_bucket.value[:]
-        valuelist.sort(cmp=node_cmp)
-        str_value = ';'.join(valuelist)
+        str_value = list_to_str(parent_bucket.value)
         buckets[str_value] = parent_bucket
         # gl_result.append(parent_bucket)
 
