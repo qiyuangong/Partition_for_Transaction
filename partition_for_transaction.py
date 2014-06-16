@@ -142,7 +142,6 @@ def distribute_data(bucket, buckets, pick_value):
         except:
             pdb.set_trace()
             print "Error: Cannot find key."
-    # pdb.set_trace()
 
 
 def balance_partitions(parent_bucket, buckets, K):
@@ -183,7 +182,6 @@ def balance_partitions(parent_bucket, buckets, K):
         parent_bucket.member = left_over[:]
         str_value = list_to_str(parent_bucket.value)
         buckets[str_value] = parent_bucket
-        # gl_result.append(parent_bucket)
 
 
 def check_splitable(bucket):
@@ -260,17 +258,12 @@ def partition(K, att_tree, data):
         if v.support == 0:
             gl_treelist[k] = [t.value for t in v.parent]
             gl_treelist[k].insert(0, k) 
-    # bucket = {'*':Bucket(data,['*'],[0])}
-    result = {}
-    suppcount = 0
-    suppress = {}
     print '-'*30
     print "K=%d" % K
     anonymize(Bucket(data,['*'],[0]), K)
     print "Publishing Result Data..."
     # changed to percentage
     all_loss = 100.0 * setalliloss(gl_result)
-    # pdb.set_trace()
     if _DEBUG:
         print [len(t.member) for t in gl_result]
         print "Number of buckets %d" % len(gl_result)
