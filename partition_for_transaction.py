@@ -22,7 +22,7 @@ def node_cmp(node1, node2):
     support1 = gl_att_tree[node1].support
     support2 = gl_att_tree[node2].support
     if  support1 != support2:
-        return support1 - support2
+        return cmp(support1, support2)
     else:
         return cmp(node1, node2)
 
@@ -63,11 +63,10 @@ def pick_node(bucket):
     """find the split node with largest information gain. 
     Then split bucket to buckets accroding to this node.
     """
-    valuelist = []
-    max_ig = -10000
-    max_value = ''
     buckets = {}
     result_list = []
+    max_ig = -10000
+    max_value = ''
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     for t in check_list:
         if len(gl_att_tree[t].child) != 0:
@@ -78,26 +77,30 @@ def pick_node(bucket):
     # begin to expand node on pick_value
     if max_value == '':
         print "Error: list empty!!"
+        return ('', {})
+    # get index of max_value
     index = bucket.value.index(max_value)
     child_value = [t.value for t in gl_att_tree[max_value].child]
     for i in range(1, len(child_value)+1):
         temp = combinations(child_value, i)
         temp = [list(t) for t in temp]
         result_list.extend(temp)
-    # generate chlid buckets
+    # generate child buckets
+    child_level = bucket.level[:]
+    child_value = bucket.value[:]
+    now_level = bucket.level[index] + 1
+    del child_level[index]
+    del child_value[index]
     for temp in result_list:
-        child_level = bucket.level[:]
-        child_value = bucket.value[:]
-        now_level = bucket.level[index] + 1
-        del child_level[index]
-        del child_value[index]
+        temp_level = child_level[:]
+        temp_value = child_value[:]
         for t in temp:
-            child_level.insert(index, now_level)
-            child_value.insert(index, t)
+            temp_level.insert(index, now_level)
+            temp_value.insert(index, t)
         hash_value = temp[:]
         hash_value.sort(cmp=node_cmp)
         str_value = ';'.join(hash_value)
-        buckets[str_value] = Bucket([], child_value, child_level)
+        buckets[str_value] = Bucket([], temp_value, temp_level)
     bucket.split_list.append(max_value)
     return (max_value, buckets)
 
@@ -110,8 +113,6 @@ def distribute_data(bucket, buckets, pick_value):
         print "Error: buckets is empty!"
         return
     data = bucket.member[:]
-    parent_level = bucket.level[:]
-    parent_value = bucket.value[:]
     for temp in data:
         gen_list = []
         for t in temp:
@@ -122,7 +123,7 @@ def distribute_data(bucket, buckets, pick_value):
                 if pos > 0:
                     gen_list.append(treelist[pos-1])
                 else:
-                    print "Error: pick node is leaf"
+                    print "Error: pick node is leaf, which cannot be splited"
             except:
                 continue
         gen_list = list(set(gen_list))
