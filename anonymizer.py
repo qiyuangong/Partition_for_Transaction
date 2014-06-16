@@ -8,6 +8,11 @@ import sys
 # Poulis set k=25, m=2 as default!
 
 if __name__ == '__main__':
+    K = 10
+    try:
+        K = int(sys.argv[1])
+    except:
+        pass
     #read gentree tax
     att_tree = read_tree()
     #read record
@@ -16,7 +21,7 @@ if __name__ == '__main__':
     for i in range(len(trans)):
         trans[i] = list(set(trans[i]))
     print "Begin Partition"
-    result = partition(10, att_tree, trans)
+    result = partition(K, att_tree, trans)
     # save_to_file(result)
     print "Finish Partition!!"
     # print "Begin Evaluation"

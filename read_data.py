@@ -81,8 +81,8 @@ def read_data(flag=0):
         bmwdata = {}
         for line in bms_webview2:
             line = line.strip()
-            # ignore first line of csv
             row = line.split('\t')
+            # use try and except to speed up comparision
             try:
                 bmwdata[row[0]].append(row[1])
             except:

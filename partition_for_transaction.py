@@ -82,7 +82,7 @@ def pick_node(bucket):
         if len(gl_att_tree[t].child) != 0:
             ig = information_gain(bucket, t)
             if ig > max_ig:
-                ig = max_ig
+                max_ig = ig
                 max_value = t
     # begin to expand node on pick_value
     if max_value == '':
@@ -260,7 +260,7 @@ def partition(K, att_tree, data):
             gl_treelist[k].insert(0, k) 
     print '-'*30
     print "K=%d" % K
-    anonymize(Bucket(data,['*'],[0]), K)
+    anonymize(Bucket(data, ['*'], [0]), K)
     print "Publishing Result Data..."
     # changed to percentage
     all_loss = 100.0 * setalliloss(gl_result)
