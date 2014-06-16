@@ -69,6 +69,17 @@ def information_gain(bucket, pick_value=''):
     return ig
 
 
+def trans_information_gain(tran, pick_value):
+    """get information gain for trans accroding to pick_value
+    """
+    ig = 0.0
+    ncp = gl_att_tree[pick_value].support
+    for t in tran:
+        if pick_value in gl_treelist[t]:
+            ig += ncp
+    return ig
+
+
 def pick_node(bucket):
     """find the split node with largest information gain. 
     Then split bucket to buckets accroding to this node.
@@ -144,7 +155,7 @@ def distribute_data(bucket, buckets, pick_value):
             print "Error: Cannot find key."
 
 
-def balance_partitions(parent_bucket, buckets, K):
+def balance_partitions(parent_bucket, buckets, K, pick_value):
     """handel buckets with less than K records
     """
     global gl_result
@@ -158,35 +169,55 @@ def balance_partitions(parent_bucket, buckets, K):
     if len(left_over) == 0:
         # left over bucket is empty
         return
-    if len(left_over) < K:
-        # re-distribute bucket with least information gain to left_over
-        # to enshure number of records in left_over is larger than K
+    # re-distribute transactions with least information gain from 
+    # buckets over k to left_over, to enshure number of 
+    # records in left_over is larger than K
+    flag = True
+    while len(left_over) < K:
+        # each iterator pick least information gain transaction from buckets over K
+        check_list = [t for t in buckets.values() if len(t.member) > K]
+        if len(check_list) == 0:
+            flag = False
+            break
         min_ig = 10000000000000000
-        min_bucket = None
-        min_key = ''
-        for k, t in buckets.iteritems():
-            ig = information_gain(t)
-            if ig < min_ig:
-                min_ig = ig
-                min_bucket = t
-                min_key = k
-        if min_key == '':
-            print "Error: can not re-distribute left over"
-            return
+        min_key = (0, 0)
+        for i, temp in enumerate(check_list):
+            for j, t in enumerate(temp.member):
+                ig = trans_information_gain(t, pick_value)
+                if ig < min_ig:
+                    min_ig = ig
+                    min_key = (i, j)
+        left_over.append(check_list[i].member[j][:])
+        del check_list[i].member[j]
+    if flag == False:
+        # Note: if flag == False, means that split is unsuccessful.
+        # So we need to pop a bucket from buckets to merge with left_over 
+        # The bucket poped is larger than K, so left over will larger than K
+        parent_bucket.splitable = False
         try:
-            left_over.extend(min_bucket.member[:])
+            min_ig = 10000000000000000
+            min_key = ''
+            for k, t in buckets.items():
+                ig = information_gain(t, pick_value)
+                if ig < min_ig:
+                    min_ig = ig
+                    min_key = k
+            left_over.extend(buckets[min_key].member[:])
+            del buckets[min_key]
         except:
+            print "Error: buckets is empty"
             pdb.set_trace()
-        del buckets[min_key]
-    if len(left_over):
-        parent_bucket.member = left_over[:]
-        str_value = list_to_str(parent_bucket.value)
-        buckets[str_value] = parent_bucket
+    parent_bucket.member = left_over[:]
+    str_value = list_to_str(parent_bucket.value)
+    buckets[str_value] = parent_bucket
 
 
-def check_splitable(bucket):
+def check_splitable(bucket, K):
     """check if bucket can further drill down
     """
+    if len(bucket.member) == K:
+        bucket.splitable = False
+        return False
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     if bucket.splitable:
         for t in check_list:
@@ -200,12 +231,12 @@ def anonymize(bucket, K):
     """recursively split dataset to create anonymization buckets 
     """
     global gl_result
-    if check_splitable(bucket) == False:
+    if check_splitable(bucket, K) == False:
         gl_result.append(bucket)
         return
     (pick_value, expandNode) = pick_node(bucket)
     distribute_data(bucket, expandNode, pick_value)
-    balance_partitions(bucket, expandNode, K)
+    balance_partitions(bucket, expandNode, K, pick_value)
     for t in expandNode.values():
         anonymize(t, K)
 
