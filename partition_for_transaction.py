@@ -167,11 +167,12 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
             left_over.extend(t.member[:])
             del buckets[k]
     if len(left_over) == 0:
-        # left over bucket is empty
+        # left over bucket is empty, skip balance step
         return
     # re-distribute transactions with least information gain from 
     # buckets over k to left_over, to enshure number of 
     # records in left_over is larger than K
+    # using flag to denote if re-distribute is successful or not
     flag = True
     while len(left_over) < K:
         # each iterator pick least information gain transaction from buckets over K
@@ -187,8 +188,8 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
                 if ig < min_ig:
                     min_ig = ig
                     min_key = (i, j)
-        left_over.append(check_list[i].member[j][:])
-        del check_list[i].member[j]
+        left_over.append(check_list[min_key[0]].member[min_key[1]][:])
+        del check_list[min_key[0]].member[min_key[1]]
     if flag == False:
         # Note: if flag == False, means that split is unsuccessful.
         # So we need to pop a bucket from buckets to merge with left_over 
