@@ -48,24 +48,16 @@ def information_gain(bucket, pick_value=''):
     if pick_value == '':
         # compute bucket's information gain
         for gen_value in bucket.value:
-            ncp = gl_att_tree[gen_value].support
-            if ncp == 0:
+            if gl_att_tree[gen_value].support == 0:
                 continue
-            cover_number = 0
             for temp in bucket.member:
-                for t in temp:
-                    if gen_value in gl_treelist[t]:
-                        cover_number += 1
-            ig += ncp * cover_number
+                ig = ig + trans_information_gain(temp, gen_value)
     else:
         # pick node's information gain
-        ncp = gl_att_tree[pick_value].support
-        if ncp == 0:
+        if gl_att_tree[pick_value].support == 0:
             return 0
         for temp in bucket.member:
-            for t in temp:
-                if pick_value in gl_treelist[t]:
-                    ig += ncp
+            ig = ig + trans_information_gain(temp, pick_value)
     return ig
 
 
