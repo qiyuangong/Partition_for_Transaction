@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-from generalization import Bucket, GenTree
-import random
 import pdb
+from generalization import Bucket, GenTree
 from itertools import combinations
 
 
@@ -13,6 +12,7 @@ gl_att_tree = {}
 gl_treesupport = 0
 gl_elementcount = 0
 gl_result = []
+
 
 # compare fuction for sort tree node
 def node_cmp(node1, node2):
@@ -273,6 +273,7 @@ def setalliloss(buckets):
 def partition(K, att_tree, data):
     """partition tran part of microdata
     """
+    result = []
     global gl_treesupport, gl_treelist, gl_att_tree, gl_elementcount
     for t in data:
         gl_elementcount += len(t)
@@ -293,4 +294,6 @@ def partition(K, att_tree, data):
         print "Number of buckets %d" % len(gl_result)
         print '*' * 10
         print "iloss = %0.2f" % all_loss + "%"
+    # transform result
+    result = [t.member[:] for t in gl_result]
     return gl_result
