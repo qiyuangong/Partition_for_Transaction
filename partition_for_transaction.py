@@ -270,7 +270,7 @@ def setalliloss(buckets):
     return alliloss
 
 
-def partition(K, att_tree, data):
+def partition(att_tree, data, K):
     """partition tran part of microdata
     """
     result = []

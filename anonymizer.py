@@ -21,7 +21,7 @@ if __name__ == '__main__':
     for i in range(len(trans)):
         trans[i] = list(set(trans[i]))
     print "Begin Partition"
-    result = partition(K, att_tree, trans)
+    result = partition(att_tree, trans, K)
     # save_to_file(result)
     print "Finish Partition!!"
     # print "Begin Evaluation"
