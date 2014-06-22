@@ -2,8 +2,8 @@
 #coding=utf-8
 
 import pdb
-from model.bucket import Bucket 
-from model.gentree import GenTree
+from models.bucket import Bucket 
+from models.gentree import GenTree
 from itertools import combinations
 
 
