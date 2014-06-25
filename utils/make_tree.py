@@ -141,30 +141,30 @@ def gen_even_BMS_tree(fanout):
     BMS_tree.close()
 
 
-    def pickle_static():
-        """pickle sorted values of BMS-WebView-2 to BMS_Static_value.pickle
-        """
-        bms_webview2 = open('data/BMS-WebView-2.dat', 'rU')
-        need_static = False
-        static_value = []
-        try:
-            static_file = open('data/BMS_Static_value.pickle', 'rb')
-            print "Data exist..."
-        except:
-            need_static = True
-            static_file = open('data/BMS_Static_value.pickle', 'wb')
-            print "Pickle Data..."
-            for i, line in enumerate(bms_webview2):
-                line = line.strip()
-                # ignore first line of csv
-                row = line.split('\t')
-                static_value.append(int(row[1]))
-            static_value = list(set(static_value))
-            static_value.sort()
-            pickle.dump(static_value, static_file)
-        static_file.close()
-        bms_webview2.close()
-        return static_value
+def pickle_static():
+    """pickle sorted values of BMS-WebView-2 to BMS_Static_value.pickle
+    """
+    bms_webview2 = open('data/BMS-WebView-2.dat', 'rU')
+    need_static = False
+    static_value = []
+    try:
+        static_file = open('data/BMS_Static_value.pickle', 'rb')
+        print "Data exist..."
+    except:
+        need_static = True
+        static_file = open('data/BMS_Static_value.pickle', 'wb')
+        print "Pickle Data..."
+        for i, line in enumerate(bms_webview2):
+            line = line.strip()
+            # ignore first line of csv
+            row = line.split('\t')
+            static_value.append(int(row[1]))
+        static_value = list(set(static_value))
+        static_value.sort()
+        pickle.dump(static_value, static_file)
+    static_file.close()
+    bms_webview2.close()
+    return static_value
 
 
 if __name__ == '__main__':

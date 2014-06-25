@@ -89,8 +89,8 @@ def read_data(flag=0):
                 bmwdata[row[0]] = [row[1]]
         bms_webview2.close()
         return bmwdata.values()
-        if __DEBUG:
-            print "Read Complete..."
+    if __DEBUG:
+        print "Read Complete..."
 
 
 
