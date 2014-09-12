@@ -1,6 +1,29 @@
 #!/usr/bin/env python
 #coding=utf-8
 
+# The algorithm is proposed by Yeye He
+# @Article{He2009,
+#   Title                    = {Anonymization of set-valued data via top-down, local generalization},
+#   Author                   = {He, Yeye and Naughton, Jeffrey F.},
+#   Journal                  = {Proc. VLDB Endow.},
+#   Year                     = {2009},
+#   Month                    = aug,
+#   Number                   = {1},
+#   Pages                    = {934--945},
+#   Volume                   = {2},
+#   Acmid                    = {1687733},
+#   ISSN                     = {2150-8097},
+#   Issue_date               = {August 2009},
+#   Numpages                 = {12},
+#   Publisher                = {VLDB Endowment},
+#   Url                      = {http://dl.acm.org/citation.cfm?id=1687627.1687733}
+# }
+# Implemented by Qiyuan Gong
+# qiyuangong@gmail.com
+
+# 2014-09-12
+
+
 import pdb
 from models.bucket import Bucket 
 from models.gentree import GenTree

@@ -9,7 +9,15 @@ Researches on data privacy have lasted for more than ten years, lots of great pa
 
 I decided to make some effort. Hoping these open source repositories can help researchers and developers on data privacy (privacy preserving data publishing).
 
+## Copyright
+
+by Qiyuan Gong
+qiyuangong@gmail.com
+
+2014-09-12
+
 ## For more information:
+
 [1]  He, Y. & Naughton, J. F. Anonymization of set-valued data via top-down, local generalization Proc. VLDB Endow., VLDB Endowment, 2009, 2, 934-945
 
 [2] Terrovitis, M.; Mamoulis, N. & Kalnis, P. Local and global recoding methods for anonymizing set-valued data The VLDB Journal, Springer-Verlag New York, Inc., 2011, 20, 83-106
