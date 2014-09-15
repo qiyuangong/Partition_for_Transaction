@@ -4,9 +4,10 @@ from partition_for_transaction import partition
 from utils.read_data import read_data, read_tree
 from utils.save_result import save_to_file
 import sys
-# Poulis set k=25, m=2 as default!
+
 
 if __name__ == '__main__':
+    # set K=10 as default
     K = 10
     try:
         K = int(sys.argv[1])

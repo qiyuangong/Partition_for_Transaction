@@ -9,6 +9,13 @@ Researches on data privacy have lasted for more than ten years, lots of great pa
 
 I decided to make some effort. Hoping these open source repositories can help researchers and developers on data privacy (privacy preserving data publishing).
 
+## Usage
+
+Run command in your terminal:
+	
+	# if K is not privoided, then K is set to 10 as default
+	python anonymizer.py [K]
+
 ## Copyright
 
 by Qiyuan Gong

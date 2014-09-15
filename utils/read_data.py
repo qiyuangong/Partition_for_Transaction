@@ -47,7 +47,7 @@ def read_tree_file(treename):
                 isleaf = True
             if not t in att_tree:
                 # always satisfy
-                att_tree[t] = GenTree(t, att_tree[temp[i - 1]], isleaf)
+                att_tree[t] = GenTree(t, att_tree[temp[i-1]], isleaf)
     if __DEBUG:
         print "Nodes No. = %d" % att_tree['*'].support
     treefile.close()

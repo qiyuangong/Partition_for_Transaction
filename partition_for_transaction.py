@@ -258,7 +258,7 @@ def anonymize(bucket, K):
         anonymize(t, K)
 
 
-def iloss(tran, middle):
+def get_iloss(tran, middle):
     """return iloss caused by anon tran to middle
     """
     iloss = 0.0
@@ -280,18 +280,18 @@ def iloss(tran, middle):
     return iloss
 
 
-def setalliloss(buckets):
+def get_all_iloss(buckets):
     """return iloss sum of buckets, recompute iloss foreach bucket
     """
-    alliloss = 0.0
+    all_iloss = 0.0
     for gtemp in buckets:
         gloss = 0.0
         for mtemp in gtemp.member:
-            gloss = gloss + iloss(mtemp, gtemp.value)
+            gloss = gloss + get_iloss(mtemp, gtemp.value)
         gtemp.iloss = gloss
-        alliloss += gloss
-    alliloss = alliloss * 1.0 / gl_element_num
-    return alliloss
+        all_iloss += gloss
+    all_iloss = all_iloss * 1.0 / gl_element_num
+    return all_iloss
 
 
 def partition(att_tree, data, K):
@@ -312,12 +312,12 @@ def partition(att_tree, data, K):
     anonymize(Bucket(data, ['*'], [0]), K)
     print "Publishing Result Data..."
     # changed to percentage
-    all_loss = 100.0 * setalliloss(gl_result)
+    all_iloss = 100.0 * get_all_iloss(gl_result)
     if _DEBUG:
         print [len(t.member) for t in gl_result]
         print "Number of buckets %d" % len(gl_result)
         print '*' * 10
-        print "iloss = %0.2f" % all_loss + "%"
+        print "iloss = %0.2f" % all_iloss + "%"
     # transform result
     result = [t.member[:] for t in gl_result]
     return gl_result
