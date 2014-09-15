@@ -31,10 +31,10 @@ from itertools import combinations
 
 
 _DEBUG = True
-gl_treelist = {}
+gl_parent_list = {}
 gl_att_tree = {}
-gl_treesupport = 0
-gl_elementcount = 0
+gl_tree_support = 0
+gl_element_num = 0
 gl_result = []
 
 
@@ -91,7 +91,7 @@ def trans_information_gain(tran, pick_value):
     ig = 0.0
     ncp = gl_att_tree[pick_value].support
     for t in tran:
-        if pick_value in gl_treelist[t]:
+        if pick_value in gl_parent_list[t]:
             ig += ncp
     return ig
 
@@ -151,12 +151,12 @@ def distribute_data(bucket, buckets, pick_value):
     for temp in data:
         gen_list = []
         for t in temp:
-            treelist = gl_treelist[t]
+            parent_list = gl_parent_list[t]
             try:
-                pos = treelist.index(pick_value)
+                pos = parent_list.index(pick_value)
                 # if covered, then replaced with new value
                 if pos > 0:
-                    gen_list.append(treelist[pos-1])
+                    gen_list.append(parent_list[pos-1])
                 else:
                     print "Error: pick node is leaf, which cannot be splited"
             except:
@@ -276,7 +276,7 @@ def iloss(tran, middle):
             continue
         iloss = iloss + ptemp.support 
     # only one attribute is involved, so we can simplfy NCP
-    iloss = iloss * 1.0 / gl_treesupport
+    iloss = iloss * 1.0 / gl_tree_support
     return iloss
 
 
@@ -290,7 +290,7 @@ def setalliloss(buckets):
             gloss = gloss + iloss(mtemp, gtemp.value)
         gtemp.iloss = gloss
         alliloss += gloss
-    alliloss = alliloss * 1.0 / gl_elementcount
+    alliloss = alliloss * 1.0 / gl_element_num
     return alliloss
 
 
@@ -298,15 +298,15 @@ def partition(att_tree, data, K):
     """partition tran part of microdata
     """
     result = []
-    global gl_treesupport, gl_treelist, gl_att_tree, gl_elementcount
+    global gl_tree_support, gl_parent_list, gl_att_tree, gl_element_num
     for t in data:
-        gl_elementcount += len(t)
+        gl_element_num += len(t)
     gl_att_tree = att_tree
-    gl_treesupport = gl_att_tree['*'].support
+    gl_tree_support = gl_att_tree['*'].support
     for k, v in gl_att_tree.iteritems():
         if v.support == 0:
-            gl_treelist[k] = [t.value for t in v.parent]
-            gl_treelist[k].insert(0, k) 
+            gl_parent_list[k] = [t.value for t in v.parent]
+            gl_parent_list[k].insert(0, k) 
     print '-'*30
     print "K=%d" % K
     anonymize(Bucket(data, ['*'], [0]), K)
