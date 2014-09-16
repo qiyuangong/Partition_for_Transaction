@@ -61,7 +61,7 @@ def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
     return sep.join(temp)
 
 
-def information_gain(bucket, pick_value=''):
+def information_gain(bucket, pick_value):
     """get information gain from bucket accroding to pick_value.
     Information gain in this algorithm is different from its general meaning
     in information theory. It's one kind of distance fuction based on NCP for 
@@ -69,22 +69,13 @@ def information_gain(bucket, pick_value=''):
     """
     ig = 0.0
     parent_value = bucket.value
-    cover_number = 0
     # Herein, all ncp will be divided by the same denominator.
     # So I don't computing true ncp, only use numerator part. 
-    if pick_value == '':
-        # compute bucket's information gain
-        for gen_value in bucket.value:
-            if gl_att_tree[gen_value].support == 0:
-                continue
-            for temp in bucket.member:
-                ig = ig + trans_information_gain(temp, gen_value)
-    else:
-        # pick node's information gain
-        if gl_att_tree[pick_value].support == 0:
-            return 0
-        for temp in bucket.member:
-            ig = ig + trans_information_gain(temp, pick_value)
+    # pick node's information gain
+    if gl_att_tree[pick_value].support == 0:
+        return 0
+    for temp in bucket.member:
+        ig = ig + trans_information_gain(temp, pick_value)
     return ig
 
 
