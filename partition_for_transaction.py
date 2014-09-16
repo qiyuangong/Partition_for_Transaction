@@ -40,7 +40,7 @@ gl_result = []
 
 # compare fuction for sort tree node
 def node_cmp(node1, node2):
-    """compare node1(str) and node2(str)
+    """compare node1(str) and node2(str).
     Compare two nodes accroding to their support
     """
     support1 = gl_att_tree[node1].support
@@ -52,7 +52,7 @@ def node_cmp(node1, node2):
 
 
 def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
-    """covert sorted str list (sorted by cmpfun) to str 
+    """covert sorted str list (sorted by cmpfun) to str.
     value (splited by sep). This fuction is value safe, which means 
     value_list will not be changed.
     """
@@ -62,7 +62,10 @@ def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
 
 
 def information_gain(bucket, pick_value=''):
-    """get information gain from bucket accroding to pick_value
+    """get information gain from bucket accroding to pick_value.
+    Information gain in this algorithm is different from its general meaning
+    in information theory. It's one kind of distance fuction based on NCP for 
+    transaction.
     """
     ig = 0.0
     parent_value = bucket.value
@@ -86,7 +89,8 @@ def information_gain(bucket, pick_value=''):
 
 
 def trans_information_gain(tran, pick_value):
-    """get information gain for trans accroding to pick_value
+    """get information gain for trans accroding to pick_value.
+    In this algorithm, information gain is based on NCP for transaction.
     """
     ig = 0.0
     ncp = gl_att_tree[pick_value].support
@@ -97,13 +101,14 @@ def trans_information_gain(tran, pick_value):
 
 
 def pick_node(bucket):
-    """find the split node with largest information gain. 
+    """find the split node with largest information gain.
     Then split bucket to buckets accroding to this node.
     """
     buckets = {}
     result_list = []
     max_ig = -10000
     max_value = ''
+    # if values in bucket have already be picked, it must have rolled back
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     for t in check_list:
         if len(gl_att_tree[t].child) != 0:
@@ -119,23 +124,20 @@ def pick_node(bucket):
     index = bucket.value.index(max_value)
     child_value = [t.value for t in gl_att_tree[max_value].child]
     for i in range(1, len(child_value)+1):
+        # For example, ALL->{A, B} can rilled down on {A},{B} and {A, B}
+        # So, we need to compute all combinations for pick node
         temp = combinations(child_value, i)
         temp = [list(t) for t in temp]
         result_list.extend(temp)
     # generate child buckets
-    child_level = bucket.level[:]
     child_value = bucket.value[:]
-    now_level = bucket.level[index] + 1
-    del child_level[index]
     del child_value[index]
     for temp in result_list:
-        temp_level = child_level[:]
         temp_value = child_value[:]
         for t in temp:
-            temp_level.insert(index, now_level)
             temp_value.insert(index, t)
         str_value = list_to_str(temp)
-        buckets[str_value] = Bucket([], temp_value, temp_level)
+        buckets[str_value] = Bucket([], temp_value)
     bucket.split_list.append(max_value)
     return (max_value, buckets)
 
@@ -230,7 +232,8 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
 
 
 def check_splitable(bucket, K):
-    """check if bucket can further drill down
+    """check if bucket can further drill down.
+    This fuction check all values have not been picked.
     """
     if len(bucket.member) == K:
         bucket.splitable = False
@@ -309,7 +312,7 @@ def partition(att_tree, data, K):
             gl_parent_list[k].insert(0, k) 
     print '-'*30
     print "K=%d" % K
-    anonymize(Bucket(data, ['*'], [0]), K)
+    anonymize(Bucket(data, ['*']), K)
     print "Publishing Result Data..."
     # changed to percentage
     all_iloss = 100.0 * get_all_iloss(gl_result)
