@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding=utf-8
+# coding=utf-8
 
 # store
 
@@ -7,6 +7,7 @@ import socket
 import pickle
 from datetime import datetime
 from utils.ftp_upload import ftp_upload
+
 
 def save_to_file(result, flag=0):
     print "Saving result...."
@@ -16,13 +17,13 @@ def save_to_file(result, flag=0):
     file_name = hostname + '-result' + file_tail
     if flag:
         # write file in text
-        file_result = open(file_path + file_name,'w')
+        file_result = open(file_path + file_name, 'w')
         for record in result:
             line = ';'.join(record) + '\n'
             file_result.write(line)
     else:
         # write file using pickle
-        file_result = open(file_path + file_name,'wb')
+        file_result = open(file_path + file_name, 'wb')
         pickle.dump(result, file_result)
     file_result.close()
     try:

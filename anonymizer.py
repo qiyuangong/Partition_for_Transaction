@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding=utf-8
+# coding=utf-8
 from partition_for_transaction import partition
 from utils.read_data import read_data, read_tree
 from utils.save_result import save_to_file
@@ -13,9 +13,9 @@ if __name__ == '__main__':
         K = int(sys.argv[1])
     except:
         pass
-    #read generalization hierarchy
+    # read generalization hierarchy
     att_tree = read_tree()
-    #read record
+    # read record
     trans = read_data()
     # remove duplicate items
     for i in range(len(trans)):
@@ -24,4 +24,3 @@ if __name__ == '__main__':
     result = partition(att_tree, trans, K)
     # save_to_file(result)
     print "Finish Partition!!"
-

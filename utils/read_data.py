@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding=utf-8
+# coding=utf-8
 
 # Read data and read tree fuctions for INFORMS data
 # user att ['DUID','PID','DUPERSID','DOBMM','DOBYY','SEX','RACEX','RACEAX','RACEBX','RACEWX','RACETHNX','HISPANX','HISPCAT','EDUCYEAR','Year','marry','income','poverty']
@@ -21,7 +21,7 @@ def read_tree(flag=0):
     else:
         return read_tree_file('BMS')
 
-  
+
 def read_tree_file(treename):
     """read tree data from treename
     """
@@ -29,12 +29,12 @@ def read_tree_file(treename):
     att_tree = {}
     prefix = 'data/treefile_'
     postfix = ".txt"
-    treefile = open(prefix + treename + postfix,'rU')
+    treefile = open(prefix + treename + postfix, 'rU')
     att_tree['*'] = GenTree('*')
     if __DEBUG:
         print "Reading Tree" + treename
     for line in treefile:
-        #delete \n
+        # delete \n
         if len(line) <= 1:
             break
         line = line.strip()
@@ -43,15 +43,15 @@ def read_tree_file(treename):
         temp.reverse()
         for i, t in enumerate(temp):
             isleaf = False
-            if i == len(temp)-1: 
+            if i == len(temp) - 1:
                 isleaf = True
-            if not t in att_tree:
+            if t not in att_tree:
                 # always satisfy
-                att_tree[t] = GenTree(t, att_tree[temp[i-1]], isleaf)
+                att_tree[t] = GenTree(t, att_tree[temp[i - 1]], isleaf)
     if __DEBUG:
         print "Nodes No. = %d" % att_tree['*'].support
     treefile.close()
-    return att_tree    
+    return att_tree
 
 
 def read_data(flag=0):
@@ -91,7 +91,3 @@ def read_data(flag=0):
         return bmwdata.values()
     if __DEBUG:
         print "Read Complete..."
-
-
-
-

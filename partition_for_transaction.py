@@ -25,7 +25,7 @@
 
 
 import pdb
-from models.bucket import Bucket 
+from models.bucket import Bucket
 from models.gentree import GenTree
 from itertools import combinations
 
@@ -45,7 +45,7 @@ def node_cmp(node1, node2):
     """
     support1 = gl_att_tree[node1].support
     support2 = gl_att_tree[node2].support
-    if  support1 != support2:
+    if support1 != support2:
         return cmp(support1, support2)
     else:
         return cmp(node1, node2)
@@ -53,7 +53,7 @@ def node_cmp(node1, node2):
 
 def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
     """covert sorted str list (sorted by cmpfun) to str.
-    value (splited by sep). This fuction is value safe, which means 
+    value (splited by sep). This fuction is value safe, which means
     value_list will not be changed.
     """
     temp = value_list[:]
@@ -64,13 +64,13 @@ def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
 def information_gain(bucket, pick_value):
     """get information gain from bucket accroding to pick_value.
     Information gain in this algorithm is different from its general meaning
-    in information theory. It's one kind of distance fuction based on NCP for 
+    in information theory. It's one kind of distance fuction based on NCP for
     transaction.
     """
     ig = 0.0
     parent_value = bucket.value
     # Herein, all ncp will be divided by the same denominator.
-    # So I don't computing true ncp, only use numerator part. 
+    # So I don't computing true ncp, only use numerator part.
     # pick node's information gain
     if gl_att_tree[pick_value].support == 0:
         return 0
@@ -114,7 +114,7 @@ def pick_node(bucket):
     # get index of max_value
     index = bucket.value.index(max_value)
     child_value = [t.value for t in gl_att_tree[max_value].child]
-    for i in range(1, len(child_value)+1):
+    for i in range(1, len(child_value) + 1):
         # For example, ALL->{A, B} can rilled down on {A},{B} and {A, B}
         # So, we need to compute all combinations for pick node
         temp = combinations(child_value, i)
@@ -149,7 +149,7 @@ def distribute_data(bucket, buckets, pick_value):
                 pos = parent_list.index(pick_value)
                 # if covered, then replaced with new value
                 if pos > 0:
-                    gen_list.append(parent_list[pos-1])
+                    gen_list.append(parent_list[pos - 1])
                 else:
                     print "Error: pick node is leaf, which cannot be splited"
             except:
@@ -178,8 +178,8 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
     if len(left_over) == 0:
         # left over bucket is empty, skip balance step
         return
-    # re-distribute transactions with least information gain from 
-    # buckets over k to left_over, to enshure number of 
+    # re-distribute transactions with least information gain from
+    # buckets over k to left_over, to enshure number of
     # records in left_over is larger than K
     # using flag to denote if re-distribute is successful or not
     flag = True
@@ -199,9 +199,9 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
                     min_key = (i, j)
         left_over.append(check_list[min_key[0]].member[min_key[1]][:])
         del check_list[min_key[0]].member[min_key[1]]
-    if flag == False:
+    if flag is False:
         # Note: if flag == False, means that split is unsuccessful.
-        # So we need to pop a bucket from buckets to merge with left_over 
+        # So we need to pop a bucket from buckets to merge with left_over
         # The bucket poped is larger than K, so left over will larger than K
         parent_bucket.splitable = False
         try:
@@ -239,10 +239,10 @@ def check_splitable(bucket, K):
 
 
 def anonymize(bucket, K):
-    """recursively split dataset to create anonymization buckets 
+    """recursively split dataset to create anonymization buckets
     """
     global gl_result
-    if check_splitable(bucket, K) == False:
+    if check_splitable(bucket, K) is False:
         gl_result.append(bucket)
         return
     (pick_value, expandNode) = pick_node(bucket)
@@ -268,7 +268,7 @@ def get_iloss(tran, middle):
             pdb.set_trace()
         if ptemp.value == t:
             continue
-        iloss = iloss + ptemp.support 
+        iloss = iloss + ptemp.support
     # only one attribute is involved, so we can simplfy NCP
     iloss = iloss * 1.0 / gl_tree_support
     return iloss
@@ -300,8 +300,8 @@ def partition(att_tree, data, K):
     for k, v in gl_att_tree.iteritems():
         if v.support == 0:
             gl_parent_list[k] = [t.value for t in v.parent]
-            gl_parent_list[k].insert(0, k) 
-    print '-'*30
+            gl_parent_list[k].insert(0, k)
+    print '-' * 30
     print "K=%d" % K
     anonymize(Bucket(data, ['*']), K)
     print "Publishing Result Data..."
