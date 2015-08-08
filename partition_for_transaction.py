@@ -1,6 +1,6 @@
-#!/usr/bin/env python
-#coding=utf-8
-
+"""
+main module of partition
+"""
 # The algorithm is proposed by Yeye He
 # @Article{He2009,
 #   Title                    = {Anonymization of set-valued data via top-down, local generalization},
@@ -23,7 +23,8 @@
 
 # 2014-09-12
 
-
+# !/usr/bin/env python
+# coding=utf-8
 import pdb
 from models.bucket import Bucket
 from models.gentree import GenTree
@@ -31,11 +32,11 @@ from itertools import combinations
 
 
 _DEBUG = True
-gl_parent_list = {}
-gl_att_tree = {}
-gl_tree_support = 0
-gl_element_num = 0
-gl_result = []
+PARENT_LIST = {}
+ATT_TREES = {}
+TREE_SUPPORT = 0
+ELEMENT_NUM = 0
+RESULT = []
 
 
 # compare fuction for sort tree node
@@ -43,8 +44,8 @@ def node_cmp(node1, node2):
     """compare node1(str) and node2(str).
     Compare two nodes accroding to their support
     """
-    support1 = gl_att_tree[node1].support
-    support2 = gl_att_tree[node2].support
+    support1 = ATT_TREES[node1].support
+    support2 = ATT_TREES[node2].support
     if support1 != support2:
         return cmp(support1, support2)
     else:
@@ -72,7 +73,7 @@ def information_gain(bucket, pick_value):
     # Herein, all ncp will be divided by the same denominator.
     # So I don't computing true ncp, only use numerator part.
     # pick node's information gain
-    if gl_att_tree[pick_value].support == 0:
+    if ATT_TREES[pick_value].support == 0:
         return 0
     for temp in bucket.member:
         ig = ig + trans_information_gain(temp, pick_value)
@@ -84,9 +85,9 @@ def trans_information_gain(tran, pick_value):
     In this algorithm, information gain is based on NCP for transaction.
     """
     ig = 0.0
-    ncp = gl_att_tree[pick_value].support
+    ncp = ATT_TREES[pick_value].support
     for t in tran:
-        if pick_value in gl_parent_list[t]:
+        if pick_value in PARENT_LIST[t]:
             ig += ncp
     return ig
 
@@ -102,7 +103,7 @@ def pick_node(bucket):
     # if values in bucket have already be picked, it must have rolled back
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     for t in check_list:
-        if len(gl_att_tree[t].child) != 0:
+        if len(ATT_TREES[t].child) != 0:
             ig = information_gain(bucket, t)
             if ig > max_ig:
                 max_ig = ig
@@ -113,7 +114,7 @@ def pick_node(bucket):
         return ('', {})
     # get index of max_value
     index = bucket.value.index(max_value)
-    child_value = [t.value for t in gl_att_tree[max_value].child]
+    child_value = [t.value for t in ATT_TREES[max_value].child]
     for i in range(1, len(child_value) + 1):
         # For example, ALL->{A, B} can rilled down on {A},{B} and {A, B}
         # So, we need to compute all combinations for pick node
@@ -144,7 +145,7 @@ def distribute_data(bucket, buckets, pick_value):
     for temp in data:
         gen_list = []
         for t in temp:
-            parent_list = gl_parent_list[t]
+            parent_list = PARENT_LIST[t]
             try:
                 pos = parent_list.index(pick_value)
                 # if covered, then replaced with new value
@@ -167,7 +168,7 @@ def distribute_data(bucket, buckets, pick_value):
 def balance_partitions(parent_bucket, buckets, K, pick_value):
     """handel buckets with less than K records
     """
-    global gl_result
+    global RESULT
     left_over = []
     for k, t in buckets.items():
         if len(t.member) < K:
@@ -232,7 +233,7 @@ def check_splitable(bucket, K):
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     if bucket.splitable:
         for t in check_list:
-            if len(gl_att_tree[t].child) != 0:
+            if len(ATT_TREES[t].child) != 0:
                 return True
         bucket.splitable = False
     return False
@@ -241,9 +242,9 @@ def check_splitable(bucket, K):
 def anonymize(bucket, K):
     """recursively split dataset to create anonymization buckets
     """
-    global gl_result
+    global RESULT
     if check_splitable(bucket, K) is False:
-        gl_result.append(bucket)
+        RESULT.append(bucket)
         return
     (pick_value, expandNode) = pick_node(bucket)
     distribute_data(bucket, expandNode, pick_value)
@@ -257,7 +258,7 @@ def get_iloss(tran, middle):
     """
     iloss = 0.0
     for t in tran:
-        ntemp = gl_att_tree[t]
+        ntemp = ATT_TREES[t]
         checktemp = ntemp.parent[:]
         checktemp.insert(0, ntemp)
         for ptemp in checktemp:
@@ -270,7 +271,7 @@ def get_iloss(tran, middle):
             continue
         iloss = iloss + ptemp.support
     # only one attribute is involved, so we can simplfy NCP
-    iloss = iloss * 1.0 / gl_tree_support
+    iloss = iloss * 1.0 / TREE_SUPPORT
     return iloss
 
 
@@ -284,7 +285,7 @@ def get_all_iloss(buckets):
             gloss = gloss + get_iloss(mtemp, gtemp.value)
         gtemp.iloss = gloss
         all_iloss += gloss
-    all_iloss = all_iloss * 1.0 / gl_element_num
+    all_iloss = all_iloss * 1.0 / ELEMENT_NUM
     return all_iloss
 
 
@@ -292,26 +293,26 @@ def partition(att_tree, data, K):
     """partition tran part of microdata
     """
     result = []
-    global gl_tree_support, gl_parent_list, gl_att_tree, gl_element_num
+    global TREE_SUPPORT, PARENT_LIST, ATT_TREES, ELEMENT_NUM
     for t in data:
-        gl_element_num += len(t)
-    gl_att_tree = att_tree
-    gl_tree_support = gl_att_tree['*'].support
-    for k, v in gl_att_tree.iteritems():
+        ELEMENT_NUM += len(t)
+    ATT_TREES = att_tree
+    TREE_SUPPORT = ATT_TREES['*'].support
+    for k, v in ATT_TREES.iteritems():
         if v.support == 0:
-            gl_parent_list[k] = [t.value for t in v.parent]
-            gl_parent_list[k].insert(0, k)
+            PARENT_LIST[k] = [t.value for t in v.parent]
+            PARENT_LIST[k].insert(0, k)
     print '-' * 30
     print "K=%d" % K
     anonymize(Bucket(data, ['*']), K)
     print "Publishing Result Data..."
     # changed to percentage
-    all_iloss = 100.0 * get_all_iloss(gl_result)
+    all_iloss = 100.0 * get_all_iloss(RESULT)
     if _DEBUG:
-        print [len(t.member) for t in gl_result]
-        print "Number of buckets %d" % len(gl_result)
+        print [len(t.member) for t in RESULT]
+        print "Number of buckets %d" % len(RESULT)
         print '*' * 10
         print "iloss = %0.2f" % all_iloss + "%"
     # transform result
-    result = [t.member[:] for t in gl_result]
-    return gl_result
+    result = [t.member[:] for t in RESULT]
+    return RESULT

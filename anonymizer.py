@@ -14,13 +14,13 @@ if __name__ == '__main__':
     except:
         pass
     # read generalization hierarchy
-    att_tree = read_tree()
+    ATT_TREES = read_tree()
     # read record
-    trans = read_data()
+    TRANSACTIONS = read_data()
     # remove duplicate items
-    for i in range(len(trans)):
-        trans[i] = list(set(trans[i]))
+    for i in range(len(TRANSACTIONS)):
+        TRANSACTIONS[i] = list(set(TRANSACTIONS[i]))
     print "Begin Partition"
-    result = partition(att_tree, trans, K)
+    result = partition(ATT_TREES, TRANSACTIONS, K)
     # save_to_file(result)
     print "Finish Partition!!"
