@@ -8,9 +8,9 @@ import sys
 
 if __name__ == '__main__':
     # set K=10 as default
-    K = 10
+    INPUT_K = 10
     try:
-        K = int(sys.argv[1])
+        INPUT_K = int(sys.argv[1])
     except:
         pass
     # read generalization hierarchy
@@ -21,6 +21,6 @@ if __name__ == '__main__':
     for i in range(len(TRANSACTIONS)):
         TRANSACTIONS[i] = list(set(TRANSACTIONS[i]))
     print "Begin Partition"
-    result = partition(ATT_TREES, TRANSACTIONS, K)
+    result = partition(ATT_TREES, TRANSACTIONS, INPUT_K)
     # save_to_file(result)
     print "Finish Partition!!"

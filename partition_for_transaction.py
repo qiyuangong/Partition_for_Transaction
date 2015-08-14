@@ -75,8 +75,8 @@ def information_gain(bucket, pick_value):
     # pick node's information gain
     if ATT_TREES[pick_value].support == 0:
         return 0
-    for temp in bucket.member:
-        ig = ig + trans_information_gain(temp, pick_value)
+    for record in bucket.member:
+        ig = ig + trans_information_gain(record, pick_value)
     return ig
 
 
@@ -142,9 +142,9 @@ def distribute_data(bucket, buckets, pick_value):
         print "Error: buckets is empty!"
         return
     data = bucket.member[:]
-    for temp in data:
+    for record in data:
         gen_list = []
-        for t in temp:
+        for t in record:
             parent_list = PARENT_LIST[t]
             try:
                 pos = parent_list.index(pick_value)
@@ -159,8 +159,8 @@ def distribute_data(bucket, buckets, pick_value):
         # sort to ensure the order
         str_value = list_to_str(gen_list)
         try:
-            buckets[str_value].member.append(temp)
-        except:
+            buckets[str_value].member.append(record)
+        except KeyError:
             pdb.set_trace()
             print "Error: Cannot find key."
 
@@ -170,11 +170,11 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
     """
     global RESULT
     left_over = []
-    for k, t in buckets.items():
-        if len(t.member) < K:
+    for k, bucket in buckets.items():
+        if len(bucket) < K:
             # add records of buckets with less than K elemnts
             # to left_over partition
-            left_over.extend(t.member[:])
+            left_over.extend(bucket.member[:])
             del buckets[k]
     if len(left_over) == 0:
         # left over bucket is empty, skip balance step
@@ -186,7 +186,7 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
     flag = True
     while len(left_over) < K:
         # each iterator pick least information gain transaction from buckets over K
-        check_list = [t for t in buckets.values() if len(t.member) > K]
+        check_list = [t for t in buckets.values() if len(t) > K]
         if len(check_list) == 0:
             flag = False
             break
@@ -227,7 +227,7 @@ def check_splitable(bucket, K):
     """check if bucket can further drill down.
     This fuction check all values have not been picked.
     """
-    if len(bucket.member) == K:
+    if len(bucket) == K:
         bucket.splitable = False
         return False
     check_list = [t for t in bucket.value if t not in bucket.split_list]
@@ -309,7 +309,7 @@ def partition(att_tree, data, K):
     # changed to percentage
     all_iloss = 100.0 * get_all_iloss(RESULT)
     if _DEBUG:
-        print [len(t.member) for t in RESULT]
+        print [len(t) for t in RESULT]
         print "Number of buckets %d" % len(RESULT)
         print '*' * 10
         print "iloss = %0.2f" % all_iloss + "%"

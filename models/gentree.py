@@ -43,3 +43,9 @@ class GenTree(object):
             return self.cover[value]
         except:
             return None
+
+    def __len__(self):
+        """
+        return number of leaf node covered by current node
+        """
+        return self.support

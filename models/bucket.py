@@ -1,3 +1,6 @@
+"""
+bucket class
+"""
 #!/usr/bin/env python
 # coding=utf-8
 
@@ -21,3 +24,9 @@ class Bucket:
         self.member = data
         self.value = value[:]
         self.splitable = True
+
+    def __len__(self):
+        """
+        return the number of records in bucket
+        """
+        return len(self.member)
