@@ -3,20 +3,20 @@ main module of partition
 """
 # The algorithm is proposed by Yeye He
 # @Article{He2009,
-#   Title                    = {Anonymization of set-valued data via top-down, local generalization},
-#   Author                   = {He, Yeye and Naughton, Jeffrey F.},
-#   Journal                  = {Proc. VLDB Endow.},
-#   Year                     = {2009},
-#   Month                    = aug,
-#   Number                   = {1},
-#   Pages                    = {934--945},
-#   Volume                   = {2},
-#   Acmid                    = {1687733},
-#   ISSN                     = {2150-8097},
-#   Issue_date               = {August 2009},
-#   Numpages                 = {12},
-#   Publisher                = {VLDB Endowment},
-#   Url                      = {http://dl.acm.org/citation.cfm?id=1687627.1687733}
+#   Title = {Anonymization of set-valued data via top-down, local generalization},
+#   Author = {He, Yeye and Naughton, Jeffrey F.},
+#   Journal = {Proc. VLDB Endow.},
+#   Year = {2009},
+#   Month  = aug,
+#   Number = {1},
+#   Pages = {934--945},
+#   Volume  = {2},
+#   Acmid = {1687733},
+#   ISSN = {2150-8097},
+#   Issue_date = {August 2009},
+#   Numpages = {12},
+#   Publisher = {VLDB Endowment},
+#   Url = {http://dl.acm.org/citation.cfm?id=1687627.1687733}
 # }
 # Implemented by Qiyuan Gong
 # qiyuangong@gmail.com
@@ -26,14 +26,15 @@ main module of partition
 # !/usr/bin/env python
 # coding=utf-8
 import pdb
+import time
 from models.bucket import Bucket
 from models.gentree import GenTree
 from itertools import combinations
 
 
-_DEBUG = True
+_DEBUG = False
 PARENT_LIST = {}
-ATT_TREES = {}
+ATT_TREE = {}
 TREE_SUPPORT = 0
 ELEMENT_NUM = 0
 RESULT = []
@@ -41,11 +42,12 @@ RESULT = []
 
 # compare fuction for sort tree node
 def node_cmp(node1, node2):
-    """compare node1(str) and node2(str).
+    """
+    compare node1(str) and node2(str).
     Compare two nodes accroding to their support
     """
-    support1 = ATT_TREES[node1].support
-    support2 = ATT_TREES[node2].support
+    support1 = ATT_TREE[node1].support
+    support2 = ATT_TREE[node2].support
     if support1 != support2:
         return cmp(support1, support2)
     else:
@@ -53,7 +55,8 @@ def node_cmp(node1, node2):
 
 
 def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
-    """covert sorted str list (sorted by cmpfun) to str.
+    """
+    covert sorted str list (sorted by cmpfun) to str.
     value (splited by sep). This fuction is value safe, which means
     value_list will not be changed.
     """
@@ -63,7 +66,8 @@ def list_to_str(value_list, cmpfun=node_cmp, sep=';'):
 
 
 def information_gain(bucket, pick_value):
-    """get information gain from bucket accroding to pick_value.
+    """
+    get information gain from bucket accroding to pick_value.
     Information gain in this algorithm is different from its general meaning
     in information theory. It's one kind of distance fuction based on NCP for
     transaction.
@@ -73,7 +77,7 @@ def information_gain(bucket, pick_value):
     # Herein, all ncp will be divided by the same denominator.
     # So I don't computing true ncp, only use numerator part.
     # pick node's information gain
-    if ATT_TREES[pick_value].support == 0:
+    if ATT_TREE[pick_value].support == 0:
         return 0
     for record in bucket.member:
         ig = ig + trans_information_gain(record, pick_value)
@@ -81,11 +85,12 @@ def information_gain(bucket, pick_value):
 
 
 def trans_information_gain(tran, pick_value):
-    """get information gain for trans accroding to pick_value.
+    """
+    get information gain for trans accroding to pick_value.
     In this algorithm, information gain is based on NCP for transaction.
     """
     ig = 0.0
-    ncp = ATT_TREES[pick_value].support
+    ncp = ATT_TREE[pick_value].support
     for t in tran:
         if pick_value in PARENT_LIST[t]:
             ig += ncp
@@ -93,7 +98,8 @@ def trans_information_gain(tran, pick_value):
 
 
 def pick_node(bucket):
-    """find the split node with largest information gain.
+    """
+    find the split node with largest information gain.
     Then split bucket to buckets accroding to this node.
     """
     buckets = {}
@@ -103,7 +109,7 @@ def pick_node(bucket):
     # if values in bucket have already be picked, it must have rolled back
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     for t in check_list:
-        if len(ATT_TREES[t].child) != 0:
+        if len(ATT_TREE[t].child) != 0:
             ig = information_gain(bucket, t)
             if ig > max_ig:
                 max_ig = ig
@@ -114,7 +120,7 @@ def pick_node(bucket):
         return ('', {})
     # get index of max_value
     index = bucket.value.index(max_value)
-    child_value = [t.value for t in ATT_TREES[max_value].child]
+    child_value = [t.value for t in ATT_TREE[max_value].child]
     for i in range(1, len(child_value) + 1):
         # For example, ALL->{A, B} can rilled down on {A},{B} and {A, B}
         # So, we need to compute all combinations for pick node
@@ -135,14 +141,15 @@ def pick_node(bucket):
 
 
 def distribute_data(bucket, buckets, pick_value):
-    """distribute records from parent_bucket to buckets (splited buckets)
+    """
+    distribute records from parent_bucket to buckets (splited buckets)
     accroding to records elements.
     """
     if len(buckets) == 0:
         print "Error: buckets is empty!"
         return
-    data = bucket.member[:]
-    for record in data:
+    record_set = bucket.member[:]
+    for record in record_set:
         gen_list = []
         for t in record:
             parent_list = PARENT_LIST[t]
@@ -166,7 +173,8 @@ def distribute_data(bucket, buckets, pick_value):
 
 
 def balance_partitions(parent_bucket, buckets, K, pick_value):
-    """handel buckets with less than K records
+    """
+    handel buckets with less than K records
     """
     global RESULT
     left_over = []
@@ -224,7 +232,8 @@ def balance_partitions(parent_bucket, buckets, K, pick_value):
 
 
 def check_splitable(bucket, K):
-    """check if bucket can further drill down.
+    """
+    check if bucket can further drill down.
     This fuction check all values have not been picked.
     """
     if len(bucket) == K:
@@ -233,7 +242,7 @@ def check_splitable(bucket, K):
     check_list = [t for t in bucket.value if t not in bucket.split_list]
     if bucket.splitable:
         for t in check_list:
-            if len(ATT_TREES[t].child) != 0:
+            if len(ATT_TREE[t].child) != 0:
                 return True
         bucket.splitable = False
     return False
@@ -254,11 +263,12 @@ def anonymize(bucket, K):
 
 
 def get_iloss(tran, middle):
-    """return iloss caused by anon tran to middle
+    """
+    return iloss caused by anon tran to middle
     """
     iloss = 0.0
     for t in tran:
-        ntemp = ATT_TREES[t]
+        ntemp = ATT_TREE[t]
         checktemp = ntemp.parent[:]
         checktemp.insert(0, ntemp)
         for ptemp in checktemp:
@@ -276,7 +286,8 @@ def get_iloss(tran, middle):
 
 
 def get_all_iloss(buckets):
-    """return iloss sum of buckets, recompute iloss foreach bucket
+    """
+    return iloss sum of buckets, recompute iloss foreach bucket
     """
     all_iloss = 0.0
     for gtemp in buckets:
@@ -289,30 +300,43 @@ def get_all_iloss(buckets):
     return all_iloss
 
 
-def partition(att_tree, data, K):
-    """partition tran part of microdata
+def init(att_tree, data, k):
     """
-    result = []
-    global TREE_SUPPORT, PARENT_LIST, ATT_TREES, ELEMENT_NUM
-    for t in data:
-        ELEMENT_NUM += len(t)
-    ATT_TREES = att_tree
-    TREE_SUPPORT = ATT_TREES['*'].support
-    for k, v in ATT_TREES.iteritems():
-        if v.support == 0:
-            PARENT_LIST[k] = [t.value for t in v.parent]
+    init global variables
+    """
+    global TREE_SUPPORT, PARENT_LIST, ATT_TREE, ELEMENT_NUM, RESULT
+    PARENT_LIST = {}
+    RESULT = []
+    TREE_SUPPORT = 0
+    ELEMENT_NUM = 0
+    for tran in data:
+        ELEMENT_NUM += len(tran)
+    ATT_TREE = att_tree
+    TREE_SUPPORT = ATT_TREE['*'].support
+    for k, node in ATT_TREE.iteritems():
+        if node.support == 0:
+            PARENT_LIST[k] = [t.value for t in node.parent]
             PARENT_LIST[k].insert(0, k)
-    print '-' * 30
-    print "K=%d" % K
-    anonymize(Bucket(data, ['*']), K)
-    print "Publishing Result Data..."
+
+
+def partition(att_tree, data, k):
+    """
+    partition tran part of microdata
+    """
+    init(att_tree, data, k)
+    result = []
+    # print '-' * 30
+    start_time = time.time()
+    anonymize(Bucket(data, ['*']), k)
+    rtime = float(time.time() - start_time)
     # changed to percentage
-    all_iloss = 100.0 * get_all_iloss(RESULT)
+    ncp = 100.0 * get_all_iloss(RESULT)
     if _DEBUG:
+        print "K=%d" % k
         print [len(t) for t in RESULT]
         print "Number of buckets %d" % len(RESULT)
         print '*' * 10
-        print "iloss = %0.2f" % all_iloss + "%"
+        print "ncp = %0.2f" % ncp + "%"
     # transform result
     result = [t.member[:] for t in RESULT]
-    return RESULT
+    return (result, (ncp, rtime))

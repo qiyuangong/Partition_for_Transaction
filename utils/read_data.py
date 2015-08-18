@@ -1,3 +1,6 @@
+"""
+read informs dataset
+"""
 #!/usr/bin/env python
 # coding=utf-8
 
@@ -45,7 +48,9 @@ def read_tree_file(treename):
             isleaf = False
             if i == len(temp) - 1:
                 isleaf = True
-            if t not in att_tree:
+            try:
+                att_tree[t]
+            except:
                 # always satisfy
                 att_tree[t] = GenTree(t, att_tree[temp[i - 1]], isleaf)
     if __DEBUG:
@@ -57,8 +62,8 @@ def read_tree_file(treename):
 def read_data(flag=0):
     """read microda for *.txt and return read data
     """
-    if flag:
-        conditionfile = open('data/conditions05.csv', 'rU')
+    if flag > 0:
+        conditionfile = open('data/conditions.csv', 'rU')
         print "Reading Data..."
         conditiondata = {}
         for i, line in enumerate(conditionfile):
@@ -69,9 +74,9 @@ def read_data(flag=0):
             row = line.split(',')
             row[1] = row[1][1:-1]
             row[2] = row[2][1:-1]
-            if row[1] in conditiondata.keys():
+            try:
                 conditiondata[row[1]].append(row[2])
-            else:
+            except:
                 conditiondata[row[1]] = [row[2]]
         conditionfile.close()
         return conditiondata.values()

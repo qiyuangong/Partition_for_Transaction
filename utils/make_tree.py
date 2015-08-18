@@ -1,3 +1,6 @@
+"""
+generate generalization hierarchy
+"""
 #!/usr/bin/env python
 # coding=utf-8
 import string
@@ -174,3 +177,4 @@ if __name__ == '__main__':
     # gen_ICD9CODX_tree()
     # gen_even_tree(5)
     # gen_even_BMS_tree(5)
+    pass
