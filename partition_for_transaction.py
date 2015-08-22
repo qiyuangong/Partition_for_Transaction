@@ -92,7 +92,7 @@ def trans_information_gain(tran, pick_value):
     ig = 0.0
     ncp = ATT_TREE[pick_value].support
     for t in tran:
-        if pick_value in PARENT_LIST[t]:
+        if pick_value in set(PARENT_LIST[t]):
             ig += ncp
     return ig
 
@@ -239,7 +239,7 @@ def check_splitable(bucket, K):
     if len(bucket) == K:
         bucket.splitable = False
         return False
-    check_list = [t for t in bucket.value if t not in bucket.split_list]
+    check_list = [t for t in bucket.value if t not in set(bucket.split_list)]
     if bucket.splitable:
         for t in check_list:
             if len(ATT_TREE[t].child) != 0:
@@ -272,7 +272,7 @@ def get_iloss(tran, middle):
         checktemp = ntemp.parent[:]
         checktemp.insert(0, ntemp)
         for ptemp in checktemp:
-            if ptemp.value in middle:
+            if ptemp.value in set(middle):
                 break
         else:
             print "Program Error!!!! t=%s middle=%s" % (t, middle)
@@ -333,7 +333,7 @@ def partition(att_tree, data, k):
     ncp = 100.0 * get_all_iloss(RESULT)
     if _DEBUG:
         print "K=%d" % k
-        print [len(t) for t in RESULT]
+        print[len(t) for t in RESULT]
         print "Number of buckets %d" % len(RESULT)
         print '*' * 10
         print "ncp = %0.2f" % ncp + "%"

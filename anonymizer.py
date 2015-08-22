@@ -8,6 +8,7 @@ from utils.read_data import read_data, read_tree
 # from utils.make_tree import gen_even_BMS_tree
 import sys
 import copy
+import random
 
 
 def get_result_one(att_tree, data, k=10):
