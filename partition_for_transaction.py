@@ -35,7 +35,7 @@ from itertools import combinations
 _DEBUG = False
 PARENT_LIST = {}
 ATT_TREE = {}
-TREE_SUPPORT = 0
+LEAF_NUM = 0
 ELEMENT_NUM = 0
 RESULT = []
 
@@ -44,10 +44,10 @@ RESULT = []
 def node_cmp(node1, node2):
     """
     compare node1(str) and node2(str).
-    Compare two nodes accroding to their support
+    Compare two nodes accroding to their leaf_num
     """
-    support1 = ATT_TREE[node1].support
-    support2 = ATT_TREE[node2].support
+    support1 = len(ATT_TREE[node1])
+    support2 = len(ATT_TREE[node2])
     if support1 != support2:
         return cmp(support1, support2)
     else:
@@ -77,7 +77,7 @@ def information_gain(bucket, pick_value):
     # Herein, all ncp will be divided by the same denominator.
     # So I don't computing true ncp, only use numerator part.
     # pick node's information gain
-    if ATT_TREE[pick_value].support == 0:
+    if len(ATT_TREE[pick_value]) == 0:
         return 0
     for record in bucket.member:
         ig = ig + trans_information_gain(record, pick_value)
@@ -90,7 +90,7 @@ def trans_information_gain(tran, pick_value):
     In this algorithm, information gain is based on NCP for transaction.
     """
     ig = 0.0
-    ncp = ATT_TREE[pick_value].support
+    ncp = len(ATT_TREE[pick_value])
     for t in tran:
         if pick_value in set(PARENT_LIST[t]):
             ig += ncp
@@ -279,9 +279,9 @@ def get_iloss(tran, middle):
             pdb.set_trace()
         if ptemp.value == t:
             continue
-        iloss = iloss + ptemp.support
+        iloss = iloss + len(ptemp)
     # only one attribute is involved, so we can simplfy NCP
-    iloss = iloss * 1.0 / TREE_SUPPORT
+    iloss = iloss * 1.0 / LEAF_NUM
     return iloss
 
 
@@ -304,17 +304,17 @@ def init(att_tree, data, k):
     """
     init global variables
     """
-    global TREE_SUPPORT, PARENT_LIST, ATT_TREE, ELEMENT_NUM, RESULT
+    global LEAF_NUM, PARENT_LIST, ATT_TREE, ELEMENT_NUM, RESULT
     PARENT_LIST = {}
     RESULT = []
-    TREE_SUPPORT = 0
+    LEAF_NUM = 0
     ELEMENT_NUM = 0
     for tran in data:
         ELEMENT_NUM += len(tran)
     ATT_TREE = att_tree
-    TREE_SUPPORT = ATT_TREE['*'].support
+    LEAF_NUM = len(ATT_TREE['*'])
     for k, node in ATT_TREE.iteritems():
-        if node.support == 0:
+        if len(node) == 0:
             PARENT_LIST[k] = [t.value for t in node.parent]
             PARENT_LIST[k].insert(0, k)
 
