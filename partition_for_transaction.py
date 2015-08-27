@@ -236,9 +236,6 @@ def check_splitable(bucket, K):
     check if bucket can further drill down.
     This fuction check all values have not been picked.
     """
-    if len(bucket) == K:
-        bucket.splitable = False
-        return False
     check_list = [t for t in bucket.value if t not in set(bucket.split_list)]
     if bucket.splitable:
         for t in check_list:
@@ -285,21 +282,6 @@ def get_iloss(tran, middle):
     return iloss
 
 
-def get_all_iloss(buckets):
-    """
-    return iloss sum of buckets, recompute iloss foreach bucket
-    """
-    all_iloss = 0.0
-    for gtemp in buckets:
-        gloss = 0.0
-        for mtemp in gtemp.member:
-            gloss = gloss + get_iloss(mtemp, gtemp.value)
-        gtemp.iloss = gloss
-        all_iloss += gloss
-    all_iloss = all_iloss * 1.0 / ELEMENT_NUM
-    return all_iloss
-
-
 def init(att_tree, data, k):
     """
     init global variables
@@ -330,7 +312,15 @@ def partition(att_tree, data, k):
     anonymize(Bucket(data, ['*']), k)
     rtime = float(time.time() - start_time)
     # changed to percentage
-    ncp = 100.0 * get_all_iloss(RESULT)
+    ncp = 0.0
+    for partition in RESULT:
+        pncp = 0.0
+        for mtemp in partition.member:
+            pncp = pncp + get_iloss(mtemp, partition.value)
+            result.append(partition.value[:])
+        partition.iloss = pncp
+        ncp += pncp
+    ncp = ncp * 100.0 / ELEMENT_NUM
     if _DEBUG:
         print "K=%d" % k
         print[len(t) for t in RESULT]
@@ -338,5 +328,4 @@ def partition(att_tree, data, k):
         print '*' * 10
         print "ncp = %0.2f" % ncp + "%"
     # transform result
-    result = [t.member[:] for t in RESULT]
     return (result, (ncp, rtime))
